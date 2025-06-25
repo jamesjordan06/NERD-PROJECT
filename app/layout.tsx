@@ -2,8 +2,8 @@
 import "../styles/globals.css";
 import { ReactNode } from "react";
 import { Providers } from "./providers";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
+import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 import type { Metadata } from "next";
 import ConsentGate from "../components/ConsentGate";
 import PasswordSetupRedirect from "../components/PasswordSetupRedirect";
