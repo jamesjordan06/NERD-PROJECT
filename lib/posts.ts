@@ -53,7 +53,7 @@ export async function fetchLegalPage(slug: string): Promise<{ title: string; des
     .from('legal_pages')
     .select('*')
     .eq('slug', slug)
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error('fetchLegalPage error:', error);

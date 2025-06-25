@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "builds": [{ "src": "next.config.js", "use": "@vercel/next" }],
   "installCommand": "npm install --legacy-peer-deps",
   "env": {
     "NEXT_TELEMETRY_DISABLED": "1"
