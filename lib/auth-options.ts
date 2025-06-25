@@ -14,22 +14,47 @@ const adminSupabase = createClient(
 );
 
 // Import the mapping functions from supabase-adapter
-import { mapUserFields, mapUserFieldsFromDB, mapAccountFields } from "./supabase-adapter";
+import {
+  mapUserFields,
+  mapUserFieldsFromDB,
+  mapAccountFields,
+} from "./supabase-adapter";
 
 // Debug environment variables
-console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
-console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
-console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
-console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET');
-console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
-console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
-console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET ? 'SET' : 'NOT SET');
+console.log("=== ENVIRONMENT VARIABLES DEBUG ===");
+console.log(
+  "GOOGLE_CLIENT_ID:",
+  process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET"
+);
+console.log(
+  "GOOGLE_CLIENT_SECRET:",
+  process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET"
+);
+console.log(
+  "NEXT_PUBLIC_SUPABASE_URL:",
+  process.env.NEXT_PUBLIC_SUPABASE_URL ? "SET" : "NOT SET"
+);
+console.log(
+  "NEXT_PUBLIC_SUPABASE_ANON_KEY:",
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "NOT SET"
+);
+console.log(
+  "SUPABASE_SERVICE_ROLE_KEY:",
+  process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET"
+);
+console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
+console.log(
+  "NEXTAUTH_SECRET:",
+  process.env.NEXTAUTH_SECRET ? "SET" : "NOT SET"
+);
 
 // Create Supabase clients only when environment variables are available
 function createSupabaseClients() {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    throw new Error('Supabase environment variables are not configured');
+  if (
+    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  ) {
+    throw new Error("Supabase environment variables are not configured");
   }
 
   const supabase = createClient(
@@ -62,11 +87,11 @@ async function ensureUserProfile(
   email?: string | null,
   name?: string | null
 ) {
-  console.log('=== ENSURE USER PROFILE START ===');
-  console.log('Ensuring profile for user:', { userId, email, name });
-  
+  console.log("=== ENSURE USER PROFILE START ===");
+  console.log("Ensuring profile for user:", { userId, email, name });
+
   const { adminSupabase } = createSupabaseClients();
-  
+
   // Check if user exists and has required fields
   const { data: user, error } = await adminSupabase
     .from("users")
@@ -84,21 +109,21 @@ async function ensureUserProfile(
     return;
   }
 
-  console.log('Current user data:', user);
+  console.log("Current user data:", user);
 
   // Update user with any missing information from Google OAuth
   const updates: Record<string, any> = {};
   if (!user.name && name) {
     updates.name = name;
-    console.log('Will update name to:', name);
+    console.log("Will update name to:", name);
   }
   if (!user.email && email) {
     updates.email = email;
-    console.log('Will update email to:', email);
+    console.log("Will update email to:", email);
   }
 
   if (Object.keys(updates).length) {
-    console.log('Updating user with:', updates);
+    console.log("Updating user with:", updates);
     const { error: updateErr } = await adminSupabase
       .from("users")
       .update(updates)
@@ -109,11 +134,11 @@ async function ensureUserProfile(
       console.log(`ensureUserProfile: updated user ${userId}`);
     }
   } else {
-    console.log('No updates needed for user profile');
+    console.log("No updates needed for user profile");
   }
 
   // Ensure profile record exists
-  console.log('Checking if profile record exists...');
+  console.log("Checking if profile record exists...");
   const { data: existingProfile, error: profileError } = await adminSupabase
     .from("profiles")
     .select("id, username, avatar_url, bio")
@@ -126,13 +151,13 @@ async function ensureUserProfile(
   }
 
   if (!existingProfile) {
-    console.log('Creating profile record for user:', userId);
+    console.log("Creating profile record for user:", userId);
     const profileData = {
       id: generateUUID(),
       user_id: userId,
-      username: user.username || email?.split('@')[0] || `user_${Date.now()}`,
+      username: user.username || email?.split("@")[0] || `user_${Date.now()}`,
       avatar_url: user.image,
-      bio: null
+      bio: null,
     };
 
     const { error: insertErr } = await adminSupabase
@@ -145,10 +170,10 @@ async function ensureUserProfile(
       console.log(`ensureUserProfile: created profile for user ${userId}`);
     }
   } else {
-    console.log('Profile record already exists:', existingProfile);
+    console.log("Profile record already exists:", existingProfile);
   }
-  
-  console.log('=== ENSURE USER PROFILE END ===');
+
+  console.log("=== ENSURE USER PROFILE END ===");
 }
 
 export const authOptions: NextAuthOptions = {
@@ -160,9 +185,9 @@ export const authOptions: NextAuthOptions = {
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
+          response_type: "code",
+        },
+      },
     }),
   ],
   adapter: SupabaseAdapter(createSupabaseClients().supabase),
@@ -218,108 +243,111 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user, account, profile }) {
       try {
-        console.log('=== JWT CALLBACK ===');
-        console.log('Token:', token);
-        console.log('User:', user);
-        console.log('Account:', account);
-        console.log('Profile:', profile);
-        console.log('JWT callback called at:', new Date().toISOString());
-        
+        console.log("=== JWT CALLBACK ===");
+        console.log("Token:", token);
+        console.log("User:", user);
+        console.log("Account:", account);
+        console.log("Profile:", profile);
+        console.log("JWT callback called at:", new Date().toISOString());
+
         // Initial sign in
         if (account && user) {
-          console.log('=== INITIAL SIGN IN - CREATING USER ===');
-          
+          console.log("=== INITIAL SIGN IN - CREATING USER ===");
+
           // Generate a UUID for the user
           const userId = generateUUID();
-          console.log('Generated user ID:', userId);
-          
+          console.log("Generated user ID:", userId);
+
           // Create user in database
           const userData = {
             id: userId,
             email: user.email,
             name: user.name,
-            username: (user as any).username || user.email?.split('@')[0] || generateUsername(),
+            username:
+              (user as any).username ||
+              user.email?.split("@")[0] ||
+              generateUsername(),
             image: user.image,
           };
-          
-          console.log('Creating user with data:', userData);
-          
+
+          console.log("Creating user with data:", userData);
+
           const { adminSupabase } = createSupabaseClients();
-          
+
           const { error: userError } = await adminSupabase
             .from("users")
             .insert([userData]);
-            
+
           if (userError) {
-            console.error('Error creating user:', userError);
+            console.error("Error creating user:", userError);
             // Don't throw error, just log it and continue
-            console.log('Continuing without user creation...');
+            console.log("Continuing without user creation...");
           } else {
-            console.log('User created successfully');
-            
+            console.log("User created successfully");
+
             // Create profile record after user is created
             const profileData = {
               id: generateUUID(),
               user_id: userId,
               username: userData.username,
               avatar_url: user.image,
-              bio: null
+              bio: null,
             };
-            
-            console.log('Creating profile with data:', profileData);
-            
+
+            console.log("Creating profile with data:", profileData);
+
             const { error: profileError } = await adminSupabase
               .from("profiles")
               .insert([profileData]);
-              
+
             if (profileError) {
-              console.error('Error creating profile:', profileError);
-              console.log('Continuing without profile creation...');
+              console.error("Error creating profile:", profileError);
+              console.log("Continuing without profile creation...");
             } else {
-              console.log('Profile created successfully');
+              console.log("Profile created successfully");
             }
           }
-          
+
           // Update token with user data
           token.id = userId;
           token.email = user.email;
           token.name = user.name;
           token.picture = user.image;
           token.username = userData.username;
-          
-          console.log('Token updated with user data:', token);
+
+          console.log("Token updated with user data:", token);
         }
-        
+
         return token;
       } catch (error) {
-        console.error('=== JWT CALLBACK ERROR ===', error);
+        console.error("=== JWT CALLBACK ERROR ===", error);
         // Don't throw error, just return the token
         return token;
       }
     },
     async session({ session, token }) {
       try {
-        console.log('=== SESSION CALLBACK ===');
-        console.log('Session received:', session);
-        console.log('Token received:', token);
-        console.log('Session callback called at:', new Date().toISOString());
-        
+        console.log("=== SESSION CALLBACK ===");
+        console.log("Session received:", session);
+        console.log("Token received:", token);
+        console.log("Session callback called at:", new Date().toISOString());
+
         if (token) {
           session.user.id = token.id as string;
           session.user.email = token.email as string;
           session.user.name = token.name as string;
           session.user.image = token.picture as string;
           (session.user as any).username = token.username as string;
-          
-          console.log('Session updated with token data:', session.user);
+
+          console.log("Session updated with token data:", session.user);
         } else {
-          console.log('No token provided to session callback');
+          console.log("No token provided to session callback");
         }
-        
-        console.log('Final session returned:', session);
+
+        console.log("Final session returned:", session);
         return session;
       } catch (error) {
-        console.error('=== SESSION CALLBACK ERROR ===', error);
+        console.error("=== SESSION CALLBACK ERROR ===", error);
         throw error;
       }
     },
@@ -331,29 +359,55 @@ export const authOptions: NextAuthOptions = {
           .eq("email", user.email)
           .maybeSingle();
 
-        if (existingUser && !error) {
+        if (error) return false;
+
+        if (existingUser) {
+          const { data: linked } = await adminSupabase
+            .from("accounts")
+            .select("id")
+            .match({
+              provider: "google",
+              provider_account_id: account.providerAccountId,
+            })
+            .maybeSingle();
+
+          if (!linked) {
+            await adminSupabase.from("accounts").insert({
+              user_id: existingUser.id,
+              provider: account.provider,
+              provider_account_id: account.providerAccountId,
+              type: account.type,
+              access_token: account.access_token,
+              refresh_token: account.refresh_token,
+              expires_at: account.expires_at,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+              session_state: account.session_state,
+            });
+          }
           return true;
         }
       }
-
       return true;
     },
     async redirect({ url, baseUrl }) {
-      console.log('=== REDIRECT CALLBACK ===');
-      console.log('URL:', url);
-      console.log('Base URL:', baseUrl);
-      console.log('URL starts with /:', url.startsWith("/"));
-      
+      console.log("=== REDIRECT CALLBACK ===");
+      console.log("URL:", url);
+      console.log("Base URL:", baseUrl);
+      console.log("URL starts with /:", url.startsWith("/"));
+
       // Only try to get origin for absolute URLs
       if (url.startsWith("http")) {
-        console.log('URL origin:', new URL(url).origin);
-        console.log('Base URL origin:', new URL(baseUrl).origin);
+        console.log("URL origin:", new URL(url).origin);
+        console.log("Base URL origin:", new URL(baseUrl).origin);
       }
-      
+
       // Allows relative callback URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
       // Allows callback URLs on the same origin
-      else if (url.startsWith("http") && new URL(url).origin === baseUrl) return url;
+      else if (url.startsWith("http") && new URL(url).origin === baseUrl)
+        return url;
       return baseUrl;
     },
   },
