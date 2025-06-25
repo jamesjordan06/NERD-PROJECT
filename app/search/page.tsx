@@ -3,11 +3,12 @@ import PostList from "../../components/PostList";
 import { Search } from "lucide-react";
 
 interface SearchPageProps {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const query = searchParams.q || "";
+  const { q: queryParam } = await searchParams;
+  const query = queryParam || "";
   const allPosts = (await fetchPosts(0, 100)) ?? [];
   
   // Filter posts based on search query

@@ -69,6 +69,7 @@ export default async function ProfilePage() {
       profile={profile}
       stats={{ threads: threadCount ?? 0, replies: replyCount ?? 0 }}
       isOwnProfile={true}
+      user={session.user}
     />
   );
 }
