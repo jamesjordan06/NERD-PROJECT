@@ -18,38 +18,38 @@ export default function SignupPage() {
     signIn("google", { callbackUrl: "/" });
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    const resSignup = await fetch("/api/signup", {
+    const trimmedEmail = email.trim();
+    const pwd = password;
+
+    // 1️⃣ Sign up via API
+    const res = await fetch("/api/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ email: trimmedEmail, password: pwd }),
     });
 
-    if (!resSignup.ok) {
-      const data = await resSignup.json().catch(() => ({}));
-      setError(data.error ?? "Failed to create user");
-      setLoading(false);
+    if (!res.ok) {
+      const { error } = await res.json();
+      setError(error ?? "Signup failed");
       return;
     }
 
-    // Auto sign-in via NextAuth (Credentials login)
-    const res = await signIn("credentials", {
+    // 2️⃣ Auto-login via Credentials provider (no redirect)
+    const result = await signIn("credentials", {
       redirect: false,
-      login: email,
-      password,
+      email: trimmedEmail,
+      password: pwd,
     });
 
-    if (res?.error) {
-      setError("Signed up, but failed to log in automatically.");
-      setLoading(false);
-      return;
+    if (result?.ok) {
+      router.push("/profile");
+    } else {
+      setError("Login failed after signup");
     }
-
-    router.push("/");
   };
 
   return (
@@ -74,7 +74,7 @@ export default function SignupPage() {
         <hr className="flex-grow" />
       </div>
 
-      <form onSubmit={handleSignup} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="email"
           placeholder="Email"
