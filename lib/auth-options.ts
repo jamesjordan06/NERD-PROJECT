@@ -15,18 +15,30 @@ import { mapUserFields, mapUserFieldsFromDB, mapAccountFields } from "./supabase
 console.log('=== ENVIRONMENT VARIABLES DEBUG ===');
 console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? 'SET' : 'NOT SET');
 console.log('GOOGLE_CLIENT_SECRET:', process.env.GOOGLE_CLIENT_SECRET ? 'SET' : 'NOT SET');
+console.log('NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? 'SET' : 'NOT SET');
+console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+console.log('SUPABASE_SERVICE_ROLE_KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SET' : 'NOT SET');
 console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
 console.log('NEXTAUTH_SECRET:', process.env.NEXTAUTH_SECRET ? 'SET' : 'NOT SET');
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+// Create Supabase clients only when environment variables are available
+function createSupabaseClients() {
+  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+    throw new Error('Supabase environment variables are not configured');
+  }
 
-const adminSupabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  );
+
+  const adminSupabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  return { supabase, adminSupabase };
+}
 
 function generateUsername() {
   return "user_" + Math.random().toString(36).substring(2, 10);
@@ -47,6 +59,8 @@ async function ensureUserProfile(
 ) {
   console.log('=== ENSURE USER PROFILE START ===');
   console.log('Ensuring profile for user:', { userId, email, name });
+  
+  const { adminSupabase } = createSupabaseClients();
   
   // Check if user exists and has required fields
   const { data: user, error } = await adminSupabase
@@ -146,6 +160,7 @@ export const authOptions: NextAuthOptions = {
       }
     }),
   ],
+  adapter: SupabaseAdapter(createSupabaseClients().supabase),
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -224,6 +239,8 @@ export const authOptions: NextAuthOptions = {
           };
           
           console.log('Creating user with data:', userData);
+          
+          const { adminSupabase } = createSupabaseClients();
           
           const { error: userError } = await adminSupabase
             .from("users")
