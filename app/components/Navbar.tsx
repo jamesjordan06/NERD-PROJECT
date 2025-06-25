@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { LOGO_URL } from "../lib/assets";
+import { LOGO_URL } from "@/lib/assets";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, Search } from "lucide-react";
 import { motion } from "framer-motion";
