@@ -176,22 +176,28 @@ async function ensureUserProfile(
   console.log("=== ENSURE USER PROFILE END ===");
 }
 
-async function ensureProfile(user: any) {
+async function ensureProfile(user: { id: string; email?: string | null; image?: string | null }) {
   const { adminSupabase } = createSupabaseClients();
-  const { data: existingProfile } = await adminSupabase
+
+  const { data: existing } = await adminSupabase
     .from("profiles")
     .select("id")
     .eq("user_id", user.id)
     .maybeSingle();
-  if (!existingProfile) {
-    await adminSupabase.from("profiles").insert({
+
+  if (!existing) {
+    const profileData = {
+      id: crypto.randomUUID(),
       user_id: user.id,
       username:
         user.email?.split("@")[0] ||
         "user_" + Math.random().toString(36).slice(2, 10),
-      avatar_url: user.image || null,
+      avatar_url: user.image ?? null,
       bio: null,
-    });
+    };
+
+    const { error } = await adminSupabase.from("profiles").insert(profileData);
+    if (error) console.error("ensureProfile insert error:", error.message);
   }
 }
 
@@ -303,7 +309,7 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google") {
         const { data: existingUser, error } = await adminSupabase
           .from("users")
-          .select("id")
+          .select("id, email, image")
           .eq("email", user.email)
           .maybeSingle();
 
