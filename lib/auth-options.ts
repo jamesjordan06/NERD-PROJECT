@@ -176,6 +176,25 @@ async function ensureUserProfile(
   console.log("=== ENSURE USER PROFILE END ===");
 }
 
+async function ensureProfile(user: any) {
+  const { adminSupabase } = createSupabaseClients();
+  const { data: existingProfile } = await adminSupabase
+    .from("profiles")
+    .select("id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+  if (!existingProfile) {
+    await adminSupabase.from("profiles").insert({
+      user_id: user.id,
+      username:
+        user.email?.split("@")[0] ||
+        "user_" + Math.random().toString(36).slice(2, 10),
+      avatar_url: user.image || null,
+      bio: null,
+    });
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     GoogleProvider({
@@ -241,89 +260,18 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user, account, profile }) {
-      try {
-        console.log("=== JWT CALLBACK ===");
-        console.log("Token:", token);
-        console.log("User:", user);
-        console.log("Account:", account);
-        console.log("Profile:", profile);
-        console.log("JWT callback called at:", new Date().toISOString());
-
-        // Initial sign in
-        if (account && user) {
-          console.log("=== INITIAL SIGN IN - CREATING USER ===");
-
-          // Generate a UUID for the user
-          const userId = generateUUID();
-          console.log("Generated user ID:", userId);
-
-          // Create user in database
-          const userData = {
-            id: userId,
-            email: user.email,
-            name: user.name,
-            username:
-              (user as any).username ||
-              user.email?.split("@")[0] ||
-              generateUsername(),
-            image: user.image,
-          };
-
-          console.log("Creating user with data:", userData);
-
-          const { adminSupabase } = createSupabaseClients();
-
-          const { error: userError } = await adminSupabase
-            .from("users")
-            .insert([userData]);
-
-          if (userError) {
-            console.error("Error creating user:", userError);
-            // Don't throw error, just log it and continue
-            console.log("Continuing without user creation...");
-          } else {
-            console.log("User created successfully");
-
-            // Create profile record after user is created
-            const profileData = {
-              id: generateUUID(),
-              user_id: userId,
-              username: userData.username,
-              avatar_url: user.image,
-              bio: null,
-            };
-
-            console.log("Creating profile with data:", profileData);
-
-            const { error: profileError } = await adminSupabase
-              .from("profiles")
-              .insert([profileData]);
-
-            if (profileError) {
-              console.error("Error creating profile:", profileError);
-              console.log("Continuing without profile creation...");
-            } else {
-              console.log("Profile created successfully");
-            }
-          }
-
-          // Update token with user data
-          token.id = userId;
-          token.email = user.email;
-          token.name = user.name;
-          token.picture = user.image;
-          token.username = userData.username;
-
-          console.log("Token updated with user data:", token);
-        }
-
-        return token;
-      } catch (error) {
-        console.error("=== JWT CALLBACK ERROR ===", error);
-        // Don't throw error, just return the token
-        return token;
+    async jwt({ token, user, account }) {
+      if (account && user) {
+        token.id = user.id;
+        token.email = user.email;
+        token.name = user.name;
+        token.picture = user.image;
+        token.username =
+          (user as any).username ||
+          user.email?.split("@")[0] ||
+          "user_" + Math.random().toString(36).slice(2, 10);
       }
+      return token;
     },
     async session({ session, token }) {
       try {
@@ -362,6 +310,7 @@ export const authOptions: NextAuthOptions = {
         if (error) return false;
 
         if (existingUser) {
+          await ensureProfile(existingUser);
           const { data: linked } = await adminSupabase
             .from("accounts")
             .select("id")
