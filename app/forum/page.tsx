@@ -5,7 +5,7 @@ import Link from "next/link";
 
 export default async function ForumPage() {
   // Debug: confirm the secret is injected at runtime
-  console.log("ForumPage sees NEXTAUTH_SECRET:", !!process.env.NEXTAUTH_SECRET);
+  console.log("Runtime NEXTAUTH_SECRET value:", process.env.NEXTAUTH_SECRET);
 
   const session = await getServerSession({
     ...authOptions,

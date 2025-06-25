@@ -11,7 +11,10 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession({
+      ...authOptions,
+      secret: process.env.NEXTAUTH_SECRET,
+    });
     
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
