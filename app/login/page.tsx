@@ -1,5 +1,8 @@
 "use client";
 
+// Ensure this route is rendered on the client to avoid build-time errors
+export const dynamic = "force-dynamic";
+
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
