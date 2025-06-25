@@ -1,0 +1,56 @@
+{
+  "name": "interstellar-nerd",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "format": "prettier --write .",
+    "prisma:migrate": "prisma migrate dev",
+    "postbuild": "next-sitemap"
+  },
+  "dependencies": {
+    "@mdx-js/react": "2.3.0",
+    "@next-auth/supabase-adapter": "0.2.1",
+    "@prisma/client": "5.22.0",
+    "@supabase/auth-helpers-nextjs": "0.10.0",
+    "@supabase/supabase-js": "2.49.9",
+    "bcryptjs": "3.0.2",
+    "dotenv": "^16.5.0",
+    "express-rate-limit": "6.7.0",
+    "framer-motion": "10.12.16",
+    "js-cookie": "3.0.5",
+    "lucide-react": "0.250.0",
+    "next": "15.3.4",
+    "next-auth": "4.24.9",
+    "next-secure-headers": "2.2.0",
+    "next-seo": "6.8.0",
+    "next-sitemap": "4.2.3",
+    "react": "18.2.0",
+    "react-cookie-consent": "9.0.0",
+    "react-dom": "18.2.0",
+    "react-icons": "5.5.0",
+    "tailwindcss": "3.4.1"
+  },
+  "devDependencies": {
+    "@mdx-js/loader": "3.1.0",
+    "@next/bundle-analyzer": "15.3.4",
+    "@next/mdx": "15.3.4",
+    "@types/js-cookie": "3.0.6",
+    "@types/react": "18.2.24",
+    "autoprefixer": "10.4.16",
+    "postcss": "8.4.31",
+    "prettier": "3.2.4",
+    "prisma": "5.22.0",
+    "typescript": "5.3.3"
+  },
+  "overrides": {
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  }
+}

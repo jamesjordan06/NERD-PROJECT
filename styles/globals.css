@@ -1,0 +1,15 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    font-family: 'Inter', 'Roboto', ui-sans-serif, system-ui, sans-serif;
+    background: #0B0D17;
+    color: #D0D6F9;
+    min-height: 100vh;
+    letter-spacing: 0.01em;
+  }
+}
+
