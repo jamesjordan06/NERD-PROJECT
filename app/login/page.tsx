@@ -11,7 +11,7 @@ import { FcGoogle } from "react-icons/fc";
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +55,7 @@ function LoginContent() {
 
     const res = await signIn("credentials", {
       redirect: false,
-      login,
+      email,
       password,
     });
 
@@ -67,12 +67,12 @@ function LoginContent() {
           "You signed up with Google. Please set your password to log in directly."
         );
       } else {
-        setError("Username or password is incorrect.");
+        setError("Invalid email or password");
       }
       return;
     }
 
-    router.push("/");
+    router.push("/profile");
   };
 
   return (
@@ -107,17 +107,17 @@ function LoginContent() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <label htmlFor="login" className="sr-only">Username or Email</label>
+        <label htmlFor="email" className="sr-only">Email</label>
         <input
-          id="login"
-          type="text"
-          name="login"
-          placeholder="Username or Email"
+          id="email"
+          type="email"
+          name="email"
+          placeholder="Email"
           className="p-2 w-full rounded text-black"
-          value={login}
-          onChange={(e) => setLogin(e.target.value.trim())}
+          value={email}
+          onChange={(e) => setEmail(e.target.value.trim())}
           required
-          autoComplete="username"
+          autoComplete="email"
         />
         <label htmlFor="password" className="sr-only">Password</label>
         <input
