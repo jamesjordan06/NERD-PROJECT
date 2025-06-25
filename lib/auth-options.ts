@@ -8,6 +8,11 @@ import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import NextAuth, { NextAuthOptions } from "next-auth";
 
+const adminSupabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 // Import the mapping functions from supabase-adapter
 import { mapUserFields, mapUserFieldsFromDB, mapAccountFields } from "./supabase-adapter";
 
@@ -318,17 +323,19 @@ export const authOptions: NextAuthOptions = {
         throw error;
       }
     },
-    async signIn({ user, account, profile }) {
-      console.log('=== SIGN IN CALLBACK ===');
-      console.log('User:', user);
-      console.log('Account:', account);
-      console.log('Profile:', profile);
-      console.log('User ID:', user?.id);
-      console.log('User Email:', user?.email);
-      console.log('Account Provider:', account?.provider);
-      console.log('Account Provider Account ID:', account?.providerAccountId);
-      console.log('SignIn callback called at:', new Date().toISOString());
-      
+    async signIn({ user, account }) {
+      if (account?.provider === "google") {
+        const { data: existingUser, error } = await adminSupabase
+          .from("users")
+          .select("id")
+          .eq("email", user.email)
+          .maybeSingle();
+
+        if (existingUser && !error) {
+          return true;
+        }
+      }
+
       return true;
     },
     async redirect({ url, baseUrl }) {
