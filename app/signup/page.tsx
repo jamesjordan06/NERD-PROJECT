@@ -32,7 +32,7 @@ export default function SignupPage() {
     const pwd = password;
 
     // 1️⃣ Sign up via API
-    const res = await fetch("/api/signup", {
+    const res = await fetch("/api/auth/signup", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email: trimmedEmail, password: pwd }),
