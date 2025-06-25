@@ -53,20 +53,23 @@ export async function POST(req: Request) {
   const normalizedEmail = email.toLowerCase().trim();
   const username = normalizedEmail.split("@")[0];
 
-  const { data: user, error } = await supabase
-    .from("users")
-    .insert(
-      { email: normalizedEmail, hashed_password: hashed, username },
-      { returning: "representation" }
-    )
-    .single();
+  const userId = uuid();                       // generate primary key
 
-  if (error) {
-    console.error("Signup failed:", error.message);
-    return NextResponse.json({ error: "signup_error" }, { status: 500 });
+  const { error: insertErr } = await supabase
+    .from("users")
+    .insert({
+      id: userId,
+      email: normalizedEmail,
+      hashed_password: hashed,
+      username,
+    });
+
+  if (insertErr) {
+    console.error("Signup insert failed:", insertErr.message);
+    return NextResponse.json({ error: "signup_insert_error" }, { status: 500 });
   }
 
-  await ensureProfile(user.id, email);
+  await ensureProfile(userId, normalizedEmail);
   return NextResponse.json({ ok: true });
 }
 
