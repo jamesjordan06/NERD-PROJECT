@@ -166,9 +166,8 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
-  jwt: {
-    secret: process.env.NEXTAUTH_SECRET,
-  },
+  secret: process.env.NEXTAUTH_SECRET,
+  jwt: {},
   cookies: {
     sessionToken: {
       name: `next-auth.session-token`,
