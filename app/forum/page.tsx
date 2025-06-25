@@ -4,7 +4,13 @@ import { authOptions } from "../../lib/auth-options";
 import Link from "next/link";
 
 export default async function ForumPage() {
-  const session = await getServerSession(authOptions);
+  // Debug: confirm the secret is injected at runtime
+  console.log("ForumPage sees NEXTAUTH_SECRET:", !!process.env.NEXTAUTH_SECRET);
+
+  const session = await getServerSession({
+    ...authOptions,
+    secret: process.env.NEXTAUTH_SECRET, // ensure secret is always provided
+  });
 
   if (!session) {
     return (
