@@ -10,8 +10,6 @@ import PostList from "../components/PostList";
 import { fetchPosts } from "../lib/posts";
 import CTA from "../components/CTA";
 import { useState, useEffect } from "react";
-import Navbar from "../components/Navbar";
-import Footer from "../components/Footer";
 import { useSession } from "next-auth/react";
 
 export default function Page() {
