@@ -63,3 +63,16 @@ export async function fetchLegalPage(slug: string): Promise<{ title: string; des
   console.log('Fetched legal page data:', data);
   return data;
 }
+
+export async function fetchLegalPageSlugs(): Promise<string[]> {
+  const { data, error } = await supabase
+    .from('legal_pages')
+    .select('slug');
+
+  if (error) {
+    console.error('fetchLegalPageSlugs error:', error);
+    return [];
+  }
+
+  return (data ?? []).map((row) => row.slug as string);
+}
