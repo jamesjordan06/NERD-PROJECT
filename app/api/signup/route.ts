@@ -50,10 +50,15 @@ export async function POST(req: Request) {
   }
 
   // C: New user → insert and create profile
+  const normalizedEmail = email.toLowerCase().trim();
+  const username = normalizedEmail.split("@")[0];
+
   const { data: user, error } = await supabase
     .from("users")
-    .insert({ email, hashed_password: hashed })
-    .select()
+    .insert(
+      { email: normalizedEmail, hashed_password: hashed, username },
+      { returning: "representation" }
+    )
     .single();
 
   if (error) {
