@@ -84,12 +84,8 @@ async function testLegalPages() {
       console.error('Error fetching all-slugs page:', allSlugsError);
     } else if (allSlugsPage) {
       console.log('✓ all-slugs page found');
-      try {
-        const slugs = JSON.parse(allSlugsPage.body);
-        console.log(`Slugs array: [${slugs.join(', ')}]`);
-      } catch (parseError) {
-        console.error('Error parsing slugs JSON:', parseError);
-      }
+      const markdown = allSlugsPage.body;
+      console.log('Body length:', markdown.length);
     } else {
       console.log('✗ all-slugs page not found');
     }

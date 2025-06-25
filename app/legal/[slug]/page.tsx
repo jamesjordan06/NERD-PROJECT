@@ -1,18 +1,11 @@
 // app/legal/[slug]/page.tsx
-import { fetchLegalPage } from '../../../lib/posts';
+import { fetchLegalPage, fetchLegalPageSlugs } from '../../../lib/posts';
 import { Metadata } from 'next';
 
 // 1) Generate all slugs at build time (fetching the string array)
 export async function generateStaticParams() {
   try {
-    const page = await fetchLegalPage('all-slugs');
-    if (!page || !page.body) {
-      console.warn('No all-slugs page found or no body content');
-      return [];
-    }
-    
-    // Parse the JSON array from the body field
-    const slugs: string[] = JSON.parse(page.body);
+    const slugs = await fetchLegalPageSlugs();
     return slugs.map((slug) => ({ slug }));
   } catch (error) {
     console.error('Error generating static params for legal pages:', error);
