@@ -6,7 +6,10 @@ import { createClient } from "@supabase/supabase-js";
 import ProfileView from "../../components/ProfileView";
 
 export default async function ProfilePage() {
-  console.log("Runtime NEXTAUTH_SECRET value:", process.env.NEXTAUTH_SECRET);
+  console.log(
+    "NEXTAUTH_SECRET available:",
+    !!process.env.NEXTAUTH_SECRET
+  );
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,

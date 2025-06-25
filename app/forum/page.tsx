@@ -4,8 +4,10 @@ import { authOptions } from "../../lib/auth-options";
 import Link from "next/link";
 
 export default async function ForumPage() {
-  // Debug: confirm the secret is injected at runtime
-  console.log("Runtime NEXTAUTH_SECRET value:", process.env.NEXTAUTH_SECRET);
+  console.log(
+    "NEXTAUTH_SECRET available:",
+    !!process.env.NEXTAUTH_SECRET
+  );
 
   const session = await getServerSession({
     ...authOptions,
