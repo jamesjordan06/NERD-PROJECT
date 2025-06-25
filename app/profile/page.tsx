@@ -24,14 +24,13 @@ export default async function ProfilePage() {
   const userId = session!.user.id;
 
   // Try to fetch the profile
-  let { data: profile, error: profErr } = await supabase
+  let { data: profile, error } = await supabase
     .from("profiles")
-    .select("id, username, avatar_url, bio")
-    .eq("id", userId)
-    .maybeSingle();
-  if (profErr) {
-    console.error('Server profile fetch error', profErr);
-  }
+    .select("*")
+    .eq("user_id", userId)
+    .single();
+  if (error) console.error("Error fetching profile:", error.message);
+  console.log("Logged-in user ID:", userId);
 
   if (!profile) {
     // Create profile if it doesn't exist
