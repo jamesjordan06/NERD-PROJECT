@@ -82,10 +82,10 @@ function LoginContent() {
       if (checkRes.ok) {
         const accountData = await checkRes.json();
         console.log("Account data:", accountData);
-        
+
         if (accountData.accountType === "oauth-only") {
-          console.log("OAuth-only account detected - showing error message");
-          setError("This account was created with Google. Please sign in with Google, or set a password to enable email/password sign-in.");
+          console.log("OAuth-only account detected - redirecting to set password");
+          router.push(`/set-password?email=${encodeURIComponent(email)}`);
           setLoading(false);
           return;
         }
