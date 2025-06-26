@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../lib/auth-options";
 import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -9,9 +10,12 @@ const supabase = createClient(
 );
 
 export async function POST(req: NextRequest) {
-  const token = await getToken({ req });
+  const session = await getServerSession({
+    ...authOptions,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  if (!token?.sub) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -22,12 +26,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Password too short" }, { status: 400 });
     }
 
-    const hashed = await bcrypt.hash(password, 10);
+    const hashed = await bcrypt.hash(password, 12);
 
     const { error } = await supabase
       .from("users")
       .update({ hashed_password: hashed })
-      .eq("id", token.sub as string);
+      .eq("id", session.user.id);
 
     if (error) {
       console.error("Error updating password:", error);
