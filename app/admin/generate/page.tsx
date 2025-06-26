@@ -43,7 +43,7 @@ export default function GenerateContent() {
     if (status === "loading") return;
     
     if (!session) {
-      router.push("/login");
+      router.push(`/login?callbackUrl=${router.asPath}`);
       return;
     }
 

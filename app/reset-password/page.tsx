@@ -26,7 +26,7 @@ export default function ResetPasswordPage() {
       setStatus("error");
     } else {
       setStatus("success");
-      setTimeout(() => router.push("/login"), 2000);
+      setTimeout(() => router.push(`/login?callbackUrl=${router.asPath}`), 2000);
     }
   };
 
