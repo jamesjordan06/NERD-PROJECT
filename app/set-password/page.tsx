@@ -3,10 +3,10 @@
 
 import { useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 
-export default function SetPasswordPage() {
+function SetPasswordContent() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -210,169 +210,189 @@ export default function SetPasswordPage() {
         }
       }
     } catch (error) {
-      setError("An error occurred while setting the password.");
+      setError("An error occurred. Please try again.");
+    } finally {
       setLoading(false);
     }
   };
 
-  if (status === "loading") return <p>Loading...</p>;
-
-  // Show password form for unauthenticated users
-  if (showEmailForm === false && status === "unauthenticated") {
+  if (status === "loading") {
     return (
-      <div className="max-w-md mx-auto py-12 space-y-6">
-        <h1 className="text-3xl font-orbitron text-center">Set Password</h1>
-        {email && (
-          <p className="text-center text-gray-600">
-            Setting password for: <strong>{email}</strong>
-          </p>
-        )}
-        
-        {success ? (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <p className="text-green-600">Password set successfully!</p>
-            <p className="text-sm text-gray-500 mt-2">
-              Logging you in and redirecting to profile...
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Loading...
+            </h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Password Set Successfully!
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              Redirecting you...
             </p>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input
-              type="password"
-              placeholder="New Password"
-              className="p-2 w-full rounded text-black"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              disabled={loading}
-            />
-            <input
-              type="password"
-              placeholder="Confirm Password"
-              className="p-2 w-full rounded text-black"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              required
-              disabled={loading}
-            />
-            {error && <p className="text-red-500 text-sm">{error}</p>}
-            <button
-              type="submit"
-              className="bg-neon px-4 py-2 text-white rounded-2xl w-full disabled:opacity-50"
-              disabled={loading}
-            >
-              {loading ? "Setting Password..." : "Set Password"}
-            </button>
-          </form>
-        )}
-        
-        <div className="text-center">
-          <a href="/login" className="text-blue-600 hover:underline">
-            Back to Login
-          </a>
         </div>
       </div>
     );
   }
 
-  // Show email form for unauthenticated users (fallback)
-  if (showEmailForm && !emailSent) {
-    return (
-      <div className="max-w-md mx-auto py-12 space-y-6">
-        <h1 className="text-3xl font-orbitron text-center">Set Password</h1>
-        <p className="text-center text-gray-600">
-          Enter your email address to set a password for your OAuth account.
-        </p>
-        
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
-          <input
-            type="email"
-            placeholder="Email Address"
-            className="p-2 w-full rounded text-black"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            disabled={loading}
-          />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="bg-neon px-4 py-2 text-white rounded-2xl w-full disabled:opacity-50"
-            disabled={loading}
-          >
-            {loading ? "Sending..." : "Send Password Setup Email"}
-          </button>
-        </form>
-        
-        <div className="text-center">
-          <a href="/login" className="text-blue-600 hover:underline">
-            Back to Login
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  // Show success message for email sent
   if (emailSent) {
     return (
-      <div className="max-w-md mx-auto py-12 space-y-6">
-        <h1 className="text-3xl font-orbitron text-center">Check Your Email</h1>
-        <div className="text-center">
-          <p className="text-green-600">Password setup email sent!</p>
-          <p className="text-sm text-gray-500 mt-2">
-            We've sent a password setup link to {email}. Click the link in your email to set your password.
-          </p>
-        </div>
-        <div className="text-center">
-          <a href="/login" className="text-blue-600 hover:underline">
-            Back to Login
-          </a>
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Check Your Email
+            </h2>
+            <p className="mt-2 text-sm text-gray-600">
+              We've sent a password setup link to {email}. Please check your email and click the link to set your password.
+            </p>
+            <button
+              onClick={() => {
+                setEmailSent(false);
+                setEmail("");
+                setError("");
+              }}
+              className="mt-4 text-indigo-600 hover:text-indigo-500"
+            >
+              Try a different email
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
-  // Show password form for authenticated users
   return (
-    <div className="max-w-md mx-auto py-12 space-y-6">
-      <h1 className="text-3xl font-orbitron text-center">Set Password</h1>
-
-      {success ? (
-        <div className="text-center">
-          <p className="text-green-600">Password updated successfully!</p>
-          <p className="text-sm text-gray-500 mt-2">Redirecting to home page...</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+        <div>
+          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+            Set Your Password
+          </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            {status === "authenticated" 
+              ? "Set a password for your account to enable email/password login."
+              : "Set a password for your OAuth account to enable email/password login."
+            }
+          </p>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="password"
-            placeholder="New Password"
-            className="p-2 w-full rounded text-black"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            disabled={loading}
-          />
-          <input
-            type="password"
-            placeholder="Confirm Password"
-            className="p-2 w-full rounded text-black"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-            disabled={loading}
-          />
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          <button
-            type="submit"
-            className="bg-neon px-4 py-2 text-white rounded-2xl w-full disabled:opacity-50"
-            disabled={loading}
-          >
-            {loading ? "Setting Password..." : "Set Password"}
-          </button>
-        </form>
-      )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+            {error}
+          </div>
+        )}
+
+        {status === "unauthenticated" && !showEmailForm && (
+          <form onSubmit={handleEmailSubmit} className="mt-8 space-y-6">
+            <div>
+              <label htmlFor="email" className="sr-only">
+                Email address
+              </label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                placeholder="Email address"
+              />
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {loading ? "Sending..." : "Send Password Setup Email"}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {(status === "authenticated" || showEmailForm) && (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6">
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="password" className="sr-only">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Password"
+                />
+              </div>
+              <div>
+                <label htmlFor="confirm" className="sr-only">
+                  Confirm Password
+                </label>
+                <input
+                  id="confirm"
+                  name="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                  placeholder="Confirm Password"
+                />
+              </div>
+            </div>
+
+            <div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+              >
+                {loading ? "Setting Password..." : "Set Password"}
+              </button>
+            </div>
+          </form>
+        )}
+      </div>
     </div>
+  );
+}
+
+export default function SetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="max-w-md w-full space-y-8">
+          <div className="text-center">
+            <h2 className="mt-6 text-3xl font-extrabold text-gray-900">
+              Loading...
+            </h2>
+          </div>
+        </div>
+      </div>
+    }>
+      <SetPasswordContent />
+    </Suspense>
   );
 }
