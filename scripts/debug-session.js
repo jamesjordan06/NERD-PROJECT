@@ -7,10 +7,14 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const debug = (...args) => {
+  if (process.env.NODE_ENV !== 'production') console.log(...args);
+};
+
 async function debugSessions() {
-  console.log('=== DEBUGGING SESSIONS ===');
-  console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
-  console.log('Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+  debug('=== DEBUGGING SESSIONS ===');
+  debug('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  debug('Service role key exists:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
   
   // Check all sessions in the database
   const { data: sessions, error } = await supabase
@@ -24,7 +28,7 @@ async function debugSessions() {
     return;
   }
   
-  console.log('Recent sessions:', sessions);
+  debug('Recent sessions:', sessions);
   
   // Check all users
   const { data: users, error: userError } = await supabase
@@ -38,7 +42,7 @@ async function debugSessions() {
     return;
   }
   
-  console.log('Recent users:', users);
+  debug('Recent users:', users);
   
   // Check all accounts
   const { data: accounts, error: accountError } = await supabase
@@ -52,7 +56,7 @@ async function debugSessions() {
     return;
   }
   
-  console.log('Recent accounts:', accounts);
+  debug('Recent accounts:', accounts);
 }
 
 debugSessions().catch(console.error); 

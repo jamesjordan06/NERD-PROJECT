@@ -6,8 +6,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const debug = (...args) => {
+  if (process.env.NODE_ENV !== 'production') console.log(...args);
+};
+
 async function testOAuthFlow() {
-  console.log('Testing OAuth flow...\n');
+  debug('Testing OAuth flow...\n');
 
   // Check if users table exists and has data
   try {
@@ -17,15 +21,15 @@ async function testOAuthFlow() {
       .limit(5);
 
     if (error) {
-      console.log('❌ Error fetching users:', error.message);
+      debug('❌ Error fetching users:', error.message);
     } else {
-      console.log('✅ Users table accessible');
-      console.log(`   Found ${users.length} users`);
+      debug('✅ Users table accessible');
+      debug(`   Found ${users.length} users`);
       
       if (users.length > 0) {
-        console.log('   Sample user data:');
+        debug('   Sample user data:');
         users.forEach((user, index) => {
-          console.log(`   User ${index + 1}:`, {
+          debug(`   User ${index + 1}:`, {
             id: user.id,
             email: user.email,
             name: user.name,
@@ -36,7 +40,7 @@ async function testOAuthFlow() {
       }
     }
   } catch (error) {
-    console.log('❌ Error:', error.message);
+    debug('❌ Error:', error.message);
   }
 
   // Check if accounts table exists and has data
@@ -47,15 +51,15 @@ async function testOAuthFlow() {
       .limit(5);
 
     if (error) {
-      console.log('❌ Error fetching accounts:', error.message);
+      debug('❌ Error fetching accounts:', error.message);
     } else {
-      console.log('✅ Accounts table accessible');
-      console.log(`   Found ${accounts.length} accounts`);
+      debug('✅ Accounts table accessible');
+      debug(`   Found ${accounts.length} accounts`);
       
       if (accounts.length > 0) {
-        console.log('   Sample account data:');
+        debug('   Sample account data:');
         accounts.forEach((account, index) => {
-          console.log(`   Account ${index + 1}:`, {
+          debug(`   Account ${index + 1}:`, {
             id: account.id,
             provider: account.provider,
             providerAccountId: account.provider_account_id,
@@ -65,10 +69,10 @@ async function testOAuthFlow() {
       }
     }
   } catch (error) {
-    console.log('❌ Error:', error.message);
+    debug('❌ Error:', error.message);
   }
 
-  console.log('\nTest complete!');
+  debug('\nTest complete!');
 }
 
 testOAuthFlow().catch(console.error); 

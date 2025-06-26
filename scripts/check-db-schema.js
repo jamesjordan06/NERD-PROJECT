@@ -6,8 +6,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const debug = (...args) => {
+  if (process.env.NODE_ENV !== 'production') console.log(...args);
+};
+
 async function checkDatabaseSchema() {
-  console.log('=== CHECKING DATABASE SCHEMA ===');
+  debug('=== CHECKING DATABASE SCHEMA ===');
   
   try {
     // Check if profiles table exists by trying to query it
@@ -17,7 +21,7 @@ async function checkDatabaseSchema() {
       .limit(1);
     
     if (profilesError && profilesError.code === '42P01') {
-      console.log('Profiles table does not exist. Creating it...');
+      debug('Profiles table does not exist. Creating it...');
       
       // Create profiles table using SQL
       const { error: createError } = await supabase.rpc('exec_sql', {
@@ -52,12 +56,12 @@ async function checkDatabaseSchema() {
         sql: 'ALTER TABLE "profiles" ADD CONSTRAINT "profiles_user_id_fkey" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;'
       });
       
-      console.log('Profiles table created successfully!');
+      debug('Profiles table created successfully!');
     } else if (profilesError) {
       console.error('Error checking profiles table:', profilesError);
       return;
     } else {
-      console.log('Profiles table already exists.');
+      debug('Profiles table already exists.');
     }
     
     // Check current users and their profiles
@@ -70,9 +74,9 @@ async function checkDatabaseSchema() {
       return;
     }
     
-    console.log(`Found ${users.length} users in database:`);
+    debug(`Found ${users.length} users in database:`);
     users.forEach(user => {
-      console.log(`- ${user.email} (${user.id}) - Password: ${user.hashed_password ? 'SET' : 'NOT SET'}`);
+      debug(`- ${user.email} (${user.id}) - Password: ${user.hashed_password ? 'SET' : 'NOT SET'}`);
     });
     
     // Check profiles
@@ -85,9 +89,9 @@ async function checkDatabaseSchema() {
       return;
     }
     
-    console.log(`Found ${profiles.length} profiles in database:`);
+    debug(`Found ${profiles.length} profiles in database:`);
     profiles.forEach(profile => {
-      console.log(`- Profile for user ${profile.user_id} (${profile.username})`);
+      debug(`- Profile for user ${profile.user_id} (${profile.username})`);
     });
     
     // Find users without profiles
@@ -96,12 +100,12 @@ async function checkDatabaseSchema() {
     );
     
     if (usersWithoutProfiles.length > 0) {
-      console.log(`\nUsers without profiles (${usersWithoutProfiles.length}):`);
+      debug(`\nUsers without profiles (${usersWithoutProfiles.length}):`);
       usersWithoutProfiles.forEach(user => {
-        console.log(`- ${user.email} (${user.id})`);
+        debug(`- ${user.email} (${user.id})`);
       });
       
-      console.log('\nCreating missing profiles...');
+      debug('\nCreating missing profiles...');
       for (const user of usersWithoutProfiles) {
         const { error: insertError } = await supabase
           .from('profiles')
@@ -116,12 +120,12 @@ async function checkDatabaseSchema() {
         if (insertError) {
           console.error(`Error creating profile for ${user.email}:`, insertError);
         } else {
-          console.log(`Created profile for ${user.email}`);
+          debug(`Created profile for ${user.email}`);
         }
       }
     }
     
-    console.log('\n=== DATABASE SCHEMA CHECK COMPLETE ===');
+    debug('\n=== DATABASE SCHEMA CHECK COMPLETE ===');
     
   } catch (error) {
     console.error('Unexpected error:', error);

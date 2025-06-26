@@ -7,13 +7,10 @@ import ProfileView from "../../components/ProfileView";
 import crypto from "crypto";
 
 export default async function ProfilePage() {
-  console.log("Runtime NEXTAUTH_SECRET value:", process.env.NEXTAUTH_SECRET);
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
   });
-console.log("🧪 SESSION DEBUG on /profile:", JSON.stringify(session, null, 2));
-  console.log('Server profile session', session);
   if (!session?.user?.id) {
     redirect("/login");
   }
@@ -32,7 +29,6 @@ console.log("🧪 SESSION DEBUG on /profile:", JSON.stringify(session, null, 2))
     .eq("user_id", userId)
     .single();
   if (error) console.error("Error fetching profile:", error.message);
-  console.log("Logged-in user ID:", userId);
 
   if (!profile) {
     const { data: newProf, error: insertErr } = await supabase

@@ -6,8 +6,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+const debug = (...args) => {
+  if (process.env.NODE_ENV !== 'production') console.log(...args);
+};
+
 async function createProfilesTable() {
-  console.log('Creating profiles table...');
+  debug('Creating profiles table...');
   
   try {
     // Create the profiles table
@@ -55,10 +59,10 @@ async function createProfilesTable() {
       console.error('Error adding foreign key:', fkError);
     }
 
-    console.log('Profiles table created successfully!');
+    debug('Profiles table created successfully!');
     
     // Create profiles for existing users
-    console.log('Creating profiles for existing users...');
+    debug('Creating profiles for existing users...');
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('id, username, image');
@@ -82,11 +86,11 @@ async function createProfilesTable() {
       if (insertError) {
         console.error(`Error creating profile for user ${user.id}:`, insertError);
       } else {
-        console.log(`Created profile for user ${user.id}`);
+        debug(`Created profile for user ${user.id}`);
       }
     }
 
-    console.log('Done!');
+    debug('Done!');
   } catch (error) {
     console.error('Unexpected error:', error);
   }
