@@ -47,6 +47,8 @@ model User {
   threads       Thread[]
   comments      Comment[]
   profile       Profile?
+  posts         Post[]
+  revisions     Revision[]
   createdAt     DateTime  @default(now())
 }
 
@@ -56,6 +58,9 @@ model Profile {
   username   String? @unique
   avatar_url String?
   bio        String?
+  is_admin   Boolean @default(false) @map("is_admin")
+  two_factor_enabled Boolean @default(false) @map("two_factor_enabled")
+  two_factor_secret  String? @map("two_factor_secret")
   user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
@@ -85,4 +90,60 @@ model Comment {
   authorId    String
   author      User     @relation(fields: [authorId], references: [id])
   createdAt   DateTime @default(now())
+}
+
+model Post {
+  id              String    @id @default(uuid())
+  title           String
+  slug            String    @unique
+  content         String    @db.Text
+  excerpt         String?   @db.Text
+  image_urls      String[]  @map("image_urls")
+  author_id       String    @map("author_id")
+  author          User      @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  published       Boolean   @default(false)
+  published_at    DateTime? @map("published_at")
+  publish_at      DateTime? @map("publish_at")
+  created_at      DateTime  @default(now()) @map("created_at")
+  updated_at      DateTime  @updatedAt @map("updated_at")
+  category        String
+  meta_title      String?   @map("meta_title")
+  meta_description String?  @map("meta_description")
+  tags            String[]
+  views           Int       @default(0)
+  likes           Int       @default(0)
+  revisions       Revision[]
+  
+  @@index([published, published_at])
+  @@index([category])
+  @@index([author_id])
+}
+
+model Revision {
+  id          String   @id @default(uuid())
+  post_id     String   @map("post_id")
+  post        Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  author_id   String   @map("author_id")
+  author      User     @relation(fields: [author_id], references: [id], onDelete: Cascade)
+  content     String   @db.Text
+  title       String
+  excerpt     String?  @db.Text
+  meta_title  String?  @map("meta_title")
+  meta_description String? @map("meta_description")
+  tags        String[]
+  created_at  DateTime @default(now()) @map("created_at")
+  
+  @@index([post_id])
+  @@index([author_id])
+}
+
+model AdminSession {
+  id        String   @id @default(uuid())
+  user_id   String   @map("user_id")
+  token     String   @unique
+  expires_at DateTime @map("expires_at")
+  created_at DateTime @default(now()) @map("created_at")
+  
+  @@index([user_id])
+  @@index([token])
 }
