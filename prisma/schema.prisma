@@ -8,122 +8,124 @@ datasource db {
 }
 
 model Account {
-  id                String  @id @default(cuid())
-  userId            String  @map("user_id")
+  id                String   @id @default(uuid())
+  user_id           String
   type              String
   provider          String
-  providerAccountId String  @map("provider_account_id")
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  provider_account_id String
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
+  user              User     @relation(fields: [user_id], references: [id])
+  @@unique([provider, provider_account_id])
 }
 
 model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique @map("session_token")
-  userId       String   @map("user_id")
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id               String   @id @default(uuid())
+  session_token    String   @unique
+  user_id          String
+  expires          DateTime
+  user             User     @relation(fields: [user_id], references: [id])
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime? @map("email_verified")
-  image         String?
-  username      String    @unique
-  hashed_password String? @map("hashed_password")
-  accounts      Account[]
-  sessions      Session[]
-  threads       Thread[]
-  comments      Comment[]
-  profile       Profile?
-  posts         Post[]
-  revisions     Revision[]
-  createdAt     DateTime  @default(now())
+  id              String    @id @default(uuid())
+  name            String?
+  email           String?   @unique
+  emailVerified   DateTime?
+  image           String?
+  username        String?   @unique
+  hashed_password String?
+  created_at      DateTime  @default(now())
+  profiles        Profile?
+  accounts        Account[]
+  sessions        Session[]
+  threads         Thread[]
+  comments        Comment[]
+  posts           Post[]
 }
 
 model Profile {
-  id         String  @id @default(cuid())
-  userId     String  @unique @map("user_id")
-  username   String? @unique
-  avatar_url String?
-  bio        String?
-  is_admin   Boolean @default(false) @map("is_admin")
-  two_factor_enabled Boolean @default(false) @map("two_factor_enabled")
-  two_factor_secret  String? @map("two_factor_secret")
-  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id              String   @id @default(uuid())
+  user_id         String   @unique
+  username        String?  @unique
+  avatar_url      String?
+  bio             String?
+  is_admin        Boolean  @default(false)
+  two_factor_enabled Boolean @default(false)
+  two_factor_secret String?
+  user            User     @relation(fields: [user_id], references: [id])
 }
 
 model VerificationToken {
   identifier String
   token      String   @unique
   expires    DateTime
-
   @@unique([identifier, token])
 }
 
+model Category {
+  id              String   @id @default(uuid())
+  name            String   @unique
+  description     String?
+  threads         Thread[]
+  posts           Post[]
+}
+
 model Thread {
-  id          String   @id @default(uuid())
-  title       String
-  category    String
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  comments    Comment[]
-  createdAt   DateTime @default(now())
+  id              String   @id @default(uuid())
+  title           String
+  body            String?
+  user_id         String
+  user            User     @relation(fields: [user_id], references: [id])
+  category_id     String?
+  category        Category? @relation(fields: [category_id], references: [id])
+  created_at      DateTime  @default(now())
+  comments        Comment[]
 }
 
 model Comment {
-  id          String   @id @default(uuid())
-  message     String
-  threadId    String
-  thread      Thread   @relation(fields: [threadId], references: [id])
-  authorId    String
-  author      User     @relation(fields: [authorId], references: [id])
-  createdAt   DateTime @default(now())
+  id              String   @id @default(uuid())
+  message         String
+  thread_id       String
+  thread          Thread   @relation(fields: [thread_id], references: [id])
+  author_id       String
+  user            User     @relation(fields: [author_id], references: [id])
+  created_at      DateTime  @default(now())
 }
 
 model Post {
-  id              String    @id @default(uuid())
+  id              String   @id @default(uuid())
   title           String
-  slug            String    @unique
-  content         String    @db.Text
-  excerpt         String?   @db.Text
-  image_urls      String[]  @map("image_urls")
-  author_id       String    @map("author_id")
-  author          User      @relation(fields: [author_id], references: [id], onDelete: Cascade)
-  published       Boolean   @default(false)
-  published_at    DateTime? @map("published_at")
-  publish_at      DateTime? @map("publish_at")
-  created_at      DateTime  @default(now()) @map("created_at")
-  updated_at      DateTime  @updatedAt @map("updated_at")
-  category        String
-  meta_title      String?   @map("meta_title")
-  meta_description String?  @map("meta_description")
+  slug            String   @unique
+  content         String
+  excerpt         String?
+  image_urls      String[]
+  author_id       String
+  user            User     @relation(fields: [author_id], references: [id])
+  published       Boolean  @default(false)
+  published_at    DateTime?
+  publish_at      DateTime?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @default(now())
+  category_id     String?
+  category        Category? @relation(fields: [category_id], references: [id])
+  meta_title      String?
+  meta_description String?
   tags            String[]
-  views           Int       @default(0)
-  likes           Int       @default(0)
-  revisions       Revision[]
-  
-  @@index([published, published_at])
-  @@index([category])
-  @@index([author_id])
+  views           Int      @default(0)
+  likes           Int      @default(0)
 }
 
 model Revision {
-  id          String   @id @default(uuid())
-  post_id     String   @map("post_id")
+  id          String   @id @default(uuid()) @db.Uuid
+  post_id     String   @map("post_id") @db.Uuid
   post        Post     @relation(fields: [post_id], references: [id], onDelete: Cascade)
-  author_id   String   @map("author_id")
+  author_id   String   @map("author_id") @db.Uuid
   author      User     @relation(fields: [author_id], references: [id], onDelete: Cascade)
   content     String   @db.Text
   title       String
@@ -138,12 +140,31 @@ model Revision {
 }
 
 model AdminSession {
-  id        String   @id @default(uuid())
-  user_id   String   @map("user_id")
+  id        String   @id @default(uuid()) @db.Uuid
+  user_id   String   @map("user_id") @db.Uuid
   token     String   @unique
   expires_at DateTime @map("expires_at")
   created_at DateTime @default(now()) @map("created_at")
   
   @@index([user_id])
   @@index([token])
+}
+
+model users {
+  id      String    @id @default(uuid())
+  threads threads[] @relation("UserThreads")
+  comments Comment[] @relation("UserComments")
+}
+
+model threads {
+  id        String    @id @default(uuid())
+  title     String
+  body      String?
+  user_id   String
+  user      users     @relation("UserThreads", fields: [user_id], references: [id])
+  category  String?
+  createdAt DateTime  @default(now())
+  comments  Comment[] @relation("ThreadComments")
+
+  @@map("threads")
 }
