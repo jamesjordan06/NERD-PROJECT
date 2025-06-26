@@ -5,7 +5,7 @@ import Providers from "./providers";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import type { Metadata } from "next";
-import ConsentGate from "../components/ConsentGate";
+import CookieBanner from "../components/CookieBanner";
 import PasswordSetupRedirect from "../components/PasswordSetupRedirect";
 
 export const metadata: Metadata = {
@@ -21,12 +21,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       </head>
       <body className="min-h-screen flex flex-col bg-spacex text-white">
         <Providers>
-          <ConsentGate>
-            <PasswordSetupRedirect />
-            <Navbar />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </ConsentGate>
+          <PasswordSetupRedirect />
+          <Navbar />
+          <main className="flex-1">{children}</main>
+          <Footer />
+          <CookieBanner />
         </Providers>
       </body>
     </html>
