@@ -1,9 +1,14 @@
 // middleware.ts
 import { withAuth } from "next-auth/middleware";
+import { authOptions } from "./lib/auth-options";
 
 export default withAuth({
+  ...authOptions,
   callbacks: {
-    authorized: ({ token }) => !!token,
+    authorized: ({ token }) => {
+      console.log("🧪 MIDDLEWARE token:", token);
+      return !!token;
+    },
   },
 });
 
