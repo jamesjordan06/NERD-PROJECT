@@ -149,22 +149,3 @@ model AdminSession {
   @@index([user_id])
   @@index([token])
 }
-
-model users {
-  id      String    @id @default(uuid())
-  threads threads[] @relation("UserThreads")
-  comments Comment[] @relation("UserComments")
-}
-
-model threads {
-  id        String    @id @default(uuid())
-  title     String
-  body      String?
-  user_id   String
-  user      users     @relation("UserThreads", fields: [user_id], references: [id])
-  category  String?
-  createdAt DateTime  @default(now())
-  comments  Comment[] @relation("ThreadComments")
-
-  @@map("threads")
-}
