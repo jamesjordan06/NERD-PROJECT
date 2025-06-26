@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Thread } from "@prisma/client";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
@@ -16,7 +16,7 @@ export async function getThreadsByCategory(category: string) {
     orderBy: { createdAt: "desc" },
     include: { _count: { select: { comments: true } } }
   });
-  return threads.map((t) => ({
+  return threads.map((t: Thread & { _count: { comments: number } }) => ({
     id: t.id,
     title: t.title,
     categorySlug: t.category,
