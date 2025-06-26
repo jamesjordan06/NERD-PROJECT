@@ -61,52 +61,45 @@ function LoginContent() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    console.log("=== HANDLE SUBMIT CALLED ===");
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
-      console.log("=== LOGIN ATTEMPT DEBUG ===");
-      console.log("Email:", email);
-      
-      // First check if the user exists and what type of account they have
+      // 1️⃣  Check the account type
       const checkRes = await fetch("/api/check-account-type", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
       });
 
-      console.log("Check account type response status:", checkRes.status);
-
-      if (checkRes.ok) {
-        const accountData = await checkRes.json();
-        console.log("Account data:", accountData);
-
-        if (accountData.accountType === "oauth-only") {
-          console.log("OAuth-only account detected - redirecting to set password");
-          router.push(`/set-password?email=${encodeURIComponent(email)}`);
-          setLoading(false);
-          return;
-        }
-      } else {
-        console.log("Check account type failed:", checkRes.status);
+      if (!checkRes.ok) {
+        console.log("check-account-type failed:", checkRes.status);
+        setError("Unable to verify account.");
+        return;
       }
 
-      console.log("Proceeding with normal sign in");
-      // Proceed with normal sign in
+      const { accountType } = await checkRes.json();
+      console.log("Account type:", accountType);
+
+      // 2️⃣  Redirect OAuth-only users to set-password page
+      if (accountType === "oauth-only") {
+        router.push(`/set-password?email=${encodeURIComponent(email)}`);
+        return;                    // ⛔️ do NOT call signIn()
+      }
+
+      // 3️⃣  Optionally handle "none" (no account)
+      if (accountType === "none") {
+        setError("No account found with that email.");
+        return;
+      }
+
+      // 4️⃣  Password-enabled account → proceed with credential sign-in
       const res = await signIn("credentials", {
         redirect: false,
         email,
         password,
       });
-
-      console.log("Sign in result:", res);
-
-      if (res?.error?.toUpperCase().includes("OAUTH_ONLY")) {
-        router.push(`/set-password?email=${encodeURIComponent(email)}`);
-        return;
-      }
 
       if (res?.error) {
         setError("Invalid email or password");
@@ -114,9 +107,9 @@ function LoginContent() {
       }
 
       router.push("/profile");
-    } catch (error) {
-      console.error("Login error:", error);
-      setError("An error occurred. Please try again.");
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Unexpected error. Please try again.");
     } finally {
       setLoading(false);
     }
