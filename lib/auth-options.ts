@@ -258,7 +258,9 @@ export const authOptions: NextAuthOptions = {
 
         // Check if user exists but has no password (OAuth-only account)
         if (!user.hashed_password) {
-          return null; // Return null to indicate invalid credentials
+          const error = new Error("OAUTH_ONLY");
+          (error as any).code = "OAUTH_ONLY";
+          throw error;
         }
 
         // Verify password
