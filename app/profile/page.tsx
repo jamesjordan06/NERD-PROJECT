@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth-options";
 import { createClient } from "@supabase/supabase-js";
 import ProfileView from "../../components/ProfileView";
+import crypto from "crypto";
 
 export default async function ProfilePage() {
   console.log("Runtime NEXTAUTH_SECRET value:", process.env.NEXTAUTH_SECRET);
@@ -33,21 +34,22 @@ export default async function ProfilePage() {
   console.log("Logged-in user ID:", userId);
 
   if (!profile) {
-    // Create profile if it doesn't exist
     const { data: newProf, error: insertErr } = await supabase
       .from("profiles")
       .insert({
-        id: userId,
-        email: session!.user.email,
+        id: crypto.randomUUID(),
+        user_id: userId,
         username: "user_" + Math.random().toString(36).substring(2, 10),
         bio: "",
         avatar_url: "",
       })
       .select("id, username, avatar_url, bio")
       .single();
+
     if (insertErr) {
-      console.error('Server profile insert error', insertErr);
+      console.error("Server profile insert error", insertErr);
     }
+
     profile = newProf ?? null;
   }
 
