@@ -25,7 +25,6 @@ export default function ProfilePageClient() {
 
       // 1) Get NextAuth session
       const session = await getSession();
-      console.log('ProfilePage session', session);
       if (!session || !session.user?.id) {
         router.replace("/login");
         return;
@@ -39,7 +38,6 @@ export default function ProfilePageClient() {
       const targetId = userId === "me" ? currentUserId : userId;
 
       // 3) Try to get profile by user_id
-      console.log('Looking for profile with user_id:', targetId);
       let { data: prof, error: profErr } = await supabase
         .from("profiles")
         .select("id, user_id, username, avatar_url, bio")
@@ -48,10 +46,8 @@ export default function ProfilePageClient() {
       if (profErr) {
         console.error('Profile fetch error', profErr);
       }
-      console.log('Fetched profile result:', { prof, profErr });
 
       if (!prof && targetId === currentUserId) {
-        console.log('Attempting to create profile for user:', targetId);
         
         const { data: newProf, error: insertErr } = await supabase
           .from("profiles")
@@ -74,7 +70,6 @@ export default function ProfilePageClient() {
           
           // If it's a unique constraint violation, try to fetch the existing profile
           if (insertErr.code === '23505') {
-            console.log('Profile already exists, fetching existing profile...');
             const { data: existingProf, error: fetchErr } = await supabase
               .from("profiles")
               .select("id, user_id, username, avatar_url, bio")
@@ -84,12 +79,10 @@ export default function ProfilePageClient() {
             if (fetchErr) {
               console.error('Error fetching existing profile:', fetchErr);
             } else {
-              console.log('Found existing profile:', existingProf);
               prof = existingProf;
             }
           }
         } else {
-          console.log('Created new profile:', newProf);
           prof = newProf;
         }
       }

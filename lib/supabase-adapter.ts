@@ -91,11 +91,7 @@ function mapSessionFields(session: any) {
       expiresValue = new Date(session.expires).toISOString();
     }
     
-    console.log('Expires field processing:', {
-      original: session.expires,
-      type: typeof session.expires,
-      processed: expiresValue
-    });
+
     
     mapped.expires = expiresValue;
   }
@@ -104,17 +100,9 @@ function mapSessionFields(session: any) {
 }
 
 export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
-  console.log('=== SUPABASE ADAPTER INITIALIZED ===');
   
   return {
     async createUser(user: any) {
-      console.log('=== CREATE USER START ===');
-      console.log('createUser called with:', {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        username: user.username
-      });
 
       // Generate UUID for user if not provided
       const userId = user.id || generateUUID();
@@ -131,10 +119,8 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
         username: username
       };
 
-      console.log('Attempting to insert user data:', userData);
 
       const mappedUser = mapUserFields(userData);
-      console.log('Mapped user fields:', mappedUser);
 
       try {
         const { data, error } = await supabase
@@ -148,10 +134,8 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
           throw error;
         }
 
-        console.log('=== CREATE USER SUCCESS ===', data);
 
         // Create profile immediately after user creation
-        console.log('=== CREATING PROFILE FOR NEW USER ===');
         const profileData = {
           id: generateUUID(),
           user_id: userId,
@@ -167,8 +151,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
         if (profileError) {
           console.error('=== CREATE PROFILE ERROR ===', profileError);
           // Don't throw error for profile creation - user is already created
-        } else {
-          console.log('=== PROFILE CREATED SUCCESSFULLY ===', profileData);
         }
 
         return mapUserFieldsFromDB(data);
@@ -179,7 +161,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async getUser(id: string) {
-      console.log('=== GET USER ===', id);
       const { data } = await supabase
         .from("users")
         .select("*")
@@ -189,7 +170,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async getUserByEmail(email: string) {
-      console.log('=== GET USER BY EMAIL ===', email);
       const { data } = await supabase
         .from("users")
         .select("*")
@@ -199,7 +179,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async getUserByAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
-      console.log('=== GET USER BY ACCOUNT ===', { provider, providerAccountId });
       
       try {
         const { data: account, error: accountError } = await supabase
@@ -210,14 +189,11 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
           .maybeSingle();
 
         if (accountError) {
-          console.log('=== GET USER BY ACCOUNT ERROR ===', accountError);
           return null;
         }
 
-        console.log('=== GET USER BY ACCOUNT RESULT ===', { account });
 
         if (!account) {
-          console.log('=== NO ACCOUNT FOUND === - Should trigger createUser');
           return null;
         }
 
@@ -228,20 +204,16 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
           .single();
 
         if (userError) {
-          console.log('=== GET USER ERROR ===', userError);
           return null;
         }
 
-        console.log('=== USER FOUND ===', user);
         return mapUserFieldsFromDB(user) || null;
       } catch (error) {
-        console.log('=== GET USER BY ACCOUNT EXCEPTION ===', error);
         return null;
       }
     },
 
     async updateUser(user: any) {
-      console.log('=== UPDATE USER ===', user.id);
       const mappedUser = mapUserFields(user);
       const { data } = await supabase
         .from("users")
@@ -256,14 +228,12 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async deleteUser(id: string) {
-      console.log('=== DELETE USER ===', id);
       await supabase.from("accounts").delete().eq("user_id", id);
       await supabase.from("sessions").delete().eq("user_id", id);
       await supabase.from("users").delete().eq("id", id);
     },
 
     async linkAccount(account: any) {
-      console.log('=== LINK ACCOUNT ===', account.provider);
       
       // Generate a proper UUID for the account ID if not provided
       const accountData = {
@@ -271,23 +241,18 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
         id: account.id || generateUUID()
       };
       
-      console.log('Linking account data:', accountData);
       
       try {
         const { data, error } = await supabase.from("accounts").insert([accountData]);
         if (error) {
-          console.log('=== LINK ACCOUNT ERROR ===', error);
           throw error;
         }
-        console.log('=== LINK ACCOUNT SUCCESS ===');
       } catch (error) {
-        console.log('=== LINK ACCOUNT EXCEPTION ===', error);
         throw error;
       }
     },
 
     async unlinkAccount({ provider, providerAccountId }: { provider: string; providerAccountId: string }) {
-      console.log('=== UNLINK ACCOUNT ===', { provider, providerAccountId });
       await supabase
         .from("accounts")
         .delete()
@@ -296,15 +261,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async createSession(session: any) {
-      console.log('=== CREATE SESSION ===', session.userId);
-      console.log('Session data received:', {
-        id: session.id,
-        sessionToken: session.sessionToken,
-        userId: session.userId,
-        expires: session.expires,
-        expiresType: typeof session.expires,
-        expiresInstance: session.expires instanceof Date
-      });
       
       // Generate an ID for the session if not provided
       const sessionWithId = {
@@ -313,8 +269,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
       };
       
       const mappedSession = mapSessionFields(sessionWithId);
-      console.log('Mapped session data:', mappedSession);
-      console.log('Session token being stored:', mappedSession.session_token);
       
       try {
         const { data, error } = await supabase
@@ -328,16 +282,12 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
           throw error;
         }
         
-        console.log('=== CREATE SESSION SUCCESS ===', data);
-        console.log('Session token in database:', data.session_token);
-        
         // Convert expires string back to Date object for NextAuth
         const sessionForNextAuth = {
           ...data,
           expires: data.expires ? new Date(data.expires) : session.expires
         };
         
-        console.log('Session returned to NextAuth:', sessionForNextAuth);
         return sessionForNextAuth;
       } catch (error) {
         console.error('=== CREATE SESSION EXCEPTION ===', error);
@@ -346,19 +296,9 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async getSessionAndUser(sessionToken: string) {
-      console.log('=== GET SESSION AND USER ===', sessionToken);
-      console.log('Session token type:', typeof sessionToken);
-      console.log('Session token length:', sessionToken?.length);
-      console.log('Session token is undefined string:', sessionToken === 'undefined');
-      console.log('Session token is empty:', sessionToken === '');
-      console.log('Session token is null:', sessionToken === null);
-      console.log('Session token value:', JSON.stringify(sessionToken));
-      console.log('Session token starts with:', sessionToken?.substring(0, 10));
       
       if (!sessionToken || sessionToken === 'undefined' || sessionToken === 'null') {
-        console.log('=== NO VALID SESSION TOKEN PROVIDED ===');
-        console.log('This means the session cookie is not being set or read properly');
-        console.log('Expected session token format: UUID-like string');
+        
         return null;
       }
       
@@ -369,18 +309,14 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
         .single();
 
       if (sessionError) {
-        console.log('=== SESSION FETCH ERROR ===', sessionError);
         return null;
       }
 
       if (!session) {
-        console.log('=== NO SESSION FOUND IN DATABASE ===');
-        console.log('Session token provided but no matching session in database');
-        console.log('Token provided:', sessionToken);
+        
         return null;
       }
 
-      console.log('=== SESSION FOUND ===', session);
 
       // Convert expires string back to Date object for NextAuth
       if (session.expires) {
@@ -399,23 +335,19 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
         .eq("id", session.user_id)
         .single();
 
-      if (userError) {
-        console.log('=== USER FETCH ERROR ===', userError);
-        return null;
-      }
+        if (userError) {
+          return null;
+        }
 
       const mappedUser = mapUserFieldsFromDB(user);
       if (!mappedUser) {
-        console.log('=== USER MAPPING FAILED ===');
         return null;
       }
 
-      console.log('=== SESSION AND USER RETURNED ===', { session, user: mappedUser });
       return { session, user: mappedUser };
     },
 
     async updateSession(session: any) {
-      console.log('=== UPDATE SESSION ===', session.sessionToken);
       const mappedSession = mapSessionFields(session);
       const { data, error } = await supabase
         .from("sessions")
@@ -444,12 +376,10 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async deleteSession(sessionToken: string) {
-      console.log('=== DELETE SESSION ===', sessionToken);
       await supabase.from("sessions").delete().eq("session_token", sessionToken);
     },
 
     async createVerificationToken(token: any) {
-      console.log('=== CREATE VERIFICATION TOKEN ===', token.identifier);
       const { data } = await supabase
         .from("verification_tokens")
         .insert([token])
@@ -459,7 +389,6 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
     },
 
     async useVerificationToken({ identifier, token }: { identifier: string; token: string }) {
-      console.log('=== USE VERIFICATION TOKEN ===', { identifier, token });
       const { data } = await supabase
         .from("verification_tokens")
         .delete()

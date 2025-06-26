@@ -34,7 +34,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    console.log(`Password set successfully for user ${token.sub}`);
 
     return NextResponse.json({ success: true });
   } catch (error) {

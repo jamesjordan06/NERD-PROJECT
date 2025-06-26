@@ -16,9 +16,6 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  console.log("=== LOGIN COMPONENT RENDERED ===");
-  console.log("Current error state:", error);
-  console.log("Current loading state:", loading);
 
   useEffect(() => {
     const err = searchParams.get("error");
@@ -33,17 +30,11 @@ function LoginContent() {
   
   const handleGoogle = () => {
     setLoading(true);
-    console.log('=== GOOGLE SIGN IN CLICKED ===');
-    console.log('Current URL:', window.location.href);
-    console.log('NEXTAUTH_URL:', process.env.NEXTAUTH_URL);
-    console.log('NEXT_PUBLIC_NEXTAUTH_URL:', process.env.NEXT_PUBLIC_NEXTAUTH_URL);
-    console.log('Window location origin:', window.location.origin);
     
     signIn("google", { 
       callbackUrl: "/profile",
       redirect: true
     }).then((result) => {
-      console.log('=== SIGN IN RESULT ===', result);
       if (result?.error) {
         console.error('Sign in error:', result.error);
         if (result.error === "OAuthAccountNotLinked") {
@@ -74,13 +65,11 @@ function LoginContent() {
       });
 
       if (!checkRes.ok) {
-        console.log("check-account-type failed:", checkRes.status);
         setError("Unable to verify account.");
         return;
       }
 
       const { accountType } = await checkRes.json();
-      console.log("Account type:", accountType);
 
       // 2️⃣  Redirect OAuth-only users to set-password page
       if (accountType === "oauth-only") {

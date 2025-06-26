@@ -20,33 +20,6 @@ import {
   mapAccountFields,
 } from "./supabase-adapter";
 
-// Debug environment variables
-console.log("=== ENVIRONMENT VARIABLES DEBUG ===");
-console.log(
-  "GOOGLE_CLIENT_ID:",
-  process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET"
-);
-console.log(
-  "GOOGLE_CLIENT_SECRET:",
-  process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET"
-);
-console.log(
-  "NEXT_PUBLIC_SUPABASE_URL:",
-  process.env.NEXT_PUBLIC_SUPABASE_URL ? "SET" : "NOT SET"
-);
-console.log(
-  "NEXT_PUBLIC_SUPABASE_ANON_KEY:",
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? "SET" : "NOT SET"
-);
-console.log(
-  "SUPABASE_SERVICE_ROLE_KEY:",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "NOT SET"
-);
-console.log("NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-console.log(
-  "NEXTAUTH_SECRET:",
-  process.env.NEXTAUTH_SECRET ? "SET" : "NOT SET"
-);
 
 // Create Supabase clients only when environment variables are available
 function createSupabaseClients() {
@@ -87,8 +60,6 @@ async function ensureUserProfile(
   email?: string | null,
   name?: string | null
 ) {
-  console.log("=== ENSURE USER PROFILE START ===");
-  console.log("Ensuring profile for user:", { userId, email, name });
 
   const { adminSupabase } = createSupabaseClients();
 
@@ -109,36 +80,27 @@ async function ensureUserProfile(
     return;
   }
 
-  console.log("Current user data:", user);
 
   // Update user with any missing information from Google OAuth
   const updates: Record<string, any> = {};
   if (!user.name && name) {
     updates.name = name;
-    console.log("Will update name to:", name);
   }
   if (!user.email && email) {
     updates.email = email;
-    console.log("Will update email to:", email);
   }
 
   if (Object.keys(updates).length) {
-    console.log("Updating user with:", updates);
     const { error: updateErr } = await adminSupabase
       .from("users")
       .update(updates)
       .eq("id", userId);
     if (updateErr) {
       console.error("ensureUserProfile: update error", updateErr);
-    } else {
-      console.log(`ensureUserProfile: updated user ${userId}`);
     }
-  } else {
-    console.log("No updates needed for user profile");
   }
 
   // Ensure profile record exists
-  console.log("Checking if profile record exists...");
   const { data: existingProfile, error: profileError } = await adminSupabase
     .from("profiles")
     .select("id, username, avatar_url, bio")
@@ -151,8 +113,6 @@ async function ensureUserProfile(
   }
 
   if (!existingProfile) {
-    console.log("Creating profile record for user:", userId);
-
     const profileData = {
       id: generateUUID(),
       user_id: userId,
@@ -167,14 +127,9 @@ async function ensureUserProfile(
 
     if (insertErr) {
       console.error("ensureUserProfile: profile insert error", insertErr);
-    } else {
-      console.log(`ensureUserProfile: created profile for user ${userId}`);
     }
-  } else {
-    console.log("Profile record already exists:", existingProfile);
   }
 
-  console.log("=== ENSURE USER PROFILE END ===");
 }
 
 async function ensureProfile(user: {
@@ -222,8 +177,6 @@ export const authOptions: NextAuthOptions = {
         },
       },
       profile(profile) {
-        console.log("=== GOOGLE PROFILE CALLBACK ===");
-        console.log("Raw profile:", profile);
         return {
           id: profile.sub,
           name: profile.name,
@@ -312,10 +265,6 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       try {
-        console.log("=== SESSION CALLBACK ===");
-        console.log("Session received:", session);
-        console.log("Token received:", token);
-        console.log("Session callback called at:", new Date().toISOString());
 
         if (token) {
           session.user.id = token.id as string;
@@ -324,12 +273,9 @@ export const authOptions: NextAuthOptions = {
           session.user.image = token.picture as string;
           (session.user as any).username = token.username as string;
 
-          console.log("Session updated with token data:", session.user);
-        } else {
-          console.log("No token provided to session callback");
+          
         }
 
-        console.log("Final session returned:", session);
         return session;
       } catch (error) {
         console.error("=== SESSION CALLBACK ERROR ===", error);
@@ -337,14 +283,8 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async signIn({ user, account }) {
-      console.log("=== SIGN IN CALLBACK ===");
-      console.log("User:", user);
-      console.log("Account:", account);
 
       if (account?.provider === "google") {
-        console.log("=== OAUTH SIGN IN CALLBACK ===");
-        console.log("User:", user);
-        console.log("Account:", account);
 
         const { data: existingUser, error } = await adminSupabase
           .from("users")
@@ -358,11 +298,9 @@ export const authOptions: NextAuthOptions = {
         }
 
         if (existingUser) {
-          console.log("Existing user found:", existingUser);
 
           // If user has a password, this is an email/password account
           if (existingUser.hashed_password) {
-            console.log("User has password - linking OAuth account");
 
             // Check if OAuth account is already linked
             const { data: linkedAccount } = await adminSupabase
@@ -376,7 +314,6 @@ export const authOptions: NextAuthOptions = {
               .maybeSingle();
 
             if (!linkedAccount) {
-              console.log("Linking OAuth account to existing user");
               // Link the OAuth account to the existing user
               const { error: linkError } = await adminSupabase
                 .from("accounts")
@@ -400,16 +337,13 @@ export const authOptions: NextAuthOptions = {
                 return false;
               }
             } else {
-              console.log("OAuth account already linked");
             }
           } else {
-            console.log("User exists but no password - OAuth-only account");
           }
 
           await ensureProfile(existingUser);
           return true;
         } else {
-          console.log("No existing user found - creating new OAuth account");
 
           // Generate random username for new OAuth user
           const generateRandomUsername = () => {
@@ -480,7 +414,6 @@ export const authOptions: NextAuthOptions = {
             attempts++;
           }
 
-          console.log("Generated username for new OAuth user:", username);
 
           // Update the user object with the generated username
           (user as any).username = username;
@@ -489,15 +422,9 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
-      console.log("=== REDIRECT CALLBACK ===");
-      console.log("URL:", url);
-      console.log("Base URL:", baseUrl);
-      console.log("URL starts with /:", url.startsWith("/"));
 
       // Only try to get origin for absolute URLs
       if (url.startsWith("http")) {
-        console.log("URL origin:", new URL(url).origin);
-        console.log("Base URL origin:", new URL(baseUrl).origin);
       }
 
       // Allows relative callback URLs

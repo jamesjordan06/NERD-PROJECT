@@ -26,13 +26,17 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
+const debug = (...args) => {
+  if (process.env.NODE_ENV !== 'production') console.log(...args);
+};
+
 async function testLegalPages() {
-  console.log('Testing legal pages...\n');
+  debug('Testing legal pages...\n');
   
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     console.error('Missing Supabase environment variables!');
-    console.log('NEXT_PUBLIC_SUPABASE_URL:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
-    console.log('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+    debug('NEXT_PUBLIC_SUPABASE_URL:', !!process.env.NEXT_PUBLIC_SUPABASE_URL);
+    debug('NEXT_PUBLIC_SUPABASE_ANON_KEY:', !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
     return;
   }
   
@@ -47,16 +51,16 @@ async function testLegalPages() {
       return;
     }
     
-    console.log(`Found ${allPages.length} legal pages:`);
+    debug(`Found ${allPages.length} legal pages:`);
     allPages.forEach(page => {
-      console.log(`- ${page.slug}: ${page.title}`);
+      debug(`- ${page.slug}: ${page.title}`);
     });
     
     // Test 2: Test specific pages
     const testSlugs = ['privacy', 'terms', 'cookie-policy'];
     
     for (const slug of testSlugs) {
-      console.log(`\nTesting ${slug}...`);
+      debug(`\nTesting ${slug}...`);
       const { data: page, error } = await supabase
         .from('legal_pages')
         .select('*')
@@ -66,14 +70,14 @@ async function testLegalPages() {
       if (error) {
         console.error(`Error fetching ${slug}:`, error);
       } else if (page) {
-        console.log(`✓ ${slug} found: ${page.title}`);
+        debug(`✓ ${slug} found: ${page.title}`);
       } else {
-        console.log(`✗ ${slug} not found`);
+        debug(`✗ ${slug} not found`);
       }
     }
     
     // Test 3: Test all-slugs page
-    console.log('\nTesting all-slugs page...');
+    debug('\nTesting all-slugs page...');
     const { data: allSlugsPage, error: allSlugsError } = await supabase
       .from('legal_pages')
       .select('*')
@@ -83,11 +87,11 @@ async function testLegalPages() {
     if (allSlugsError) {
       console.error('Error fetching all-slugs page:', allSlugsError);
     } else if (allSlugsPage) {
-      console.log('✓ all-slugs page found');
+      debug('✓ all-slugs page found');
       const markdown = allSlugsPage.body;
-      console.log('Body length:', markdown.length);
+      debug('Body length:', markdown.length);
     } else {
-      console.log('✗ all-slugs page not found');
+      debug('✗ all-slugs page not found');
     }
     
   } catch (error) {
