@@ -12,6 +12,7 @@ export default async function ProfilePage() {
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
   });
+console.log("🧪 SESSION DEBUG on /profile:", JSON.stringify(session, null, 2));
   console.log('Server profile session', session);
   if (!session?.user?.id) {
     redirect("/login");
