@@ -103,6 +103,11 @@ function LoginContent() {
 
       console.log("Sign in result:", res);
 
+      if (res?.error?.toUpperCase().includes("OAUTH_ONLY")) {
+        router.push(`/set-password?email=${encodeURIComponent(email)}`);
+        return;
+      }
+
       if (res?.error) {
         setError("Invalid email or password");
         return;
