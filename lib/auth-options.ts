@@ -152,7 +152,7 @@ async function ensureUserProfile(
 
   if (!existingProfile) {
     console.log("Creating profile record for user:", userId);
-    
+
     const profileData = {
       id: generateUUID(),
       user_id: userId,
@@ -177,7 +177,12 @@ async function ensureUserProfile(
   console.log("=== ENSURE USER PROFILE END ===");
 }
 
-async function ensureProfile(user: { id: string; email?: string | null; image?: string | null; username?: string | null }) {
+async function ensureProfile(user: {
+  id: string;
+  email?: string | null;
+  image?: string | null;
+  username?: string | null;
+}) {
   const { adminSupabase } = createSupabaseClients();
 
   const { data: existing } = await adminSupabase
@@ -190,7 +195,10 @@ async function ensureProfile(user: { id: string; email?: string | null; image?: 
     const profileData = {
       id: crypto.randomUUID(),
       user_id: user.id,
-      username: user.username || user.email?.split("@")[0] || "user_" + Math.random().toString(36).slice(2, 10),
+      username:
+        user.username ||
+        user.email?.split("@")[0] ||
+        "user_" + Math.random().toString(36).slice(2, 10),
       avatar_url: user.image ?? null,
       bio: null,
     };
@@ -228,7 +236,7 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -236,7 +244,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         const { supabase } = createSupabaseClients();
-        
+
         // Find user by email
         const { data: user, error } = await supabase
           .from("users")
@@ -254,8 +262,11 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Verify password
-        const isValid = await bcrypt.compare(credentials.password, user.hashed_password);
-        
+        const isValid = await bcrypt.compare(
+          credentials.password,
+          user.hashed_password
+        );
+
         if (!isValid) {
           return null;
         }
@@ -268,7 +279,7 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
           username: user.username,
         };
-      }
+      },
     }),
   ],
   adapter: SupabaseAdapter(createSupabaseClients().supabase),
@@ -279,44 +290,6 @@ export const authOptions: NextAuthOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   jwt: {},
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-      },
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: false,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-    state: {
-      name: `next-auth.state`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: process.env.NODE_ENV === "production",
-      },
-    },
-  },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -384,11 +357,11 @@ export const authOptions: NextAuthOptions = {
 
         if (existingUser) {
           console.log("Existing user found:", existingUser);
-          
+
           // If user has a password, this is an email/password account
           if (existingUser.hashed_password) {
             console.log("User has password - linking OAuth account");
-            
+
             // Check if OAuth account is already linked
             const { data: linkedAccount } = await adminSupabase
               .from("accounts")
@@ -435,16 +408,55 @@ export const authOptions: NextAuthOptions = {
           return true;
         } else {
           console.log("No existing user found - creating new OAuth account");
-          
+
           // Generate random username for new OAuth user
           const generateRandomUsername = () => {
-            const adjectives = ['swift', 'bright', 'cosmic', 'stellar', 'lunar', 'solar', 'neon', 'cyber', 'quantum', 'nebula', 'pulsar', 'nova', 'galaxy', 'orbit', 'cosmos', 'astro'];
-            const nouns = ['star', 'pilot', 'explorer', 'voyager', 'traveler', 'wanderer', 'seeker', 'finder', 'discoverer', 'creator', 'builder', 'maker', 'dreamer', 'thinker', 'adventurer', 'hero', 'legend', 'champion', 'warrior', 'knight'];
-            
-            const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const adjectives = [
+              "swift",
+              "bright",
+              "cosmic",
+              "stellar",
+              "lunar",
+              "solar",
+              "neon",
+              "cyber",
+              "quantum",
+              "nebula",
+              "pulsar",
+              "nova",
+              "galaxy",
+              "orbit",
+              "cosmos",
+              "astro",
+            ];
+            const nouns = [
+              "star",
+              "pilot",
+              "explorer",
+              "voyager",
+              "traveler",
+              "wanderer",
+              "seeker",
+              "finder",
+              "discoverer",
+              "creator",
+              "builder",
+              "maker",
+              "dreamer",
+              "thinker",
+              "adventurer",
+              "hero",
+              "legend",
+              "champion",
+              "warrior",
+              "knight",
+            ];
+
+            const randomAdjective =
+              adjectives[Math.floor(Math.random() * adjectives.length)];
             const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
             const randomNumber = Math.floor(Math.random() * 999) + 1;
-            
+
             return `${randomAdjective}_${randomNoun}_${randomNumber}`;
           };
 
@@ -452,22 +464,22 @@ export const authOptions: NextAuthOptions = {
           let username = generateRandomUsername();
           let attempts = 0;
           const maxAttempts = 10;
-          
+
           while (attempts < maxAttempts) {
             const { data: existingUserWithUsername } = await adminSupabase
               .from("users")
               .select("id")
               .eq("username", username)
               .maybeSingle();
-            
+
             if (!existingUserWithUsername) break;
-            
+
             username = generateRandomUsername();
             attempts++;
           }
 
           console.log("Generated username for new OAuth user:", username);
-          
+
           // Update the user object with the generated username
           (user as any).username = username;
         }
