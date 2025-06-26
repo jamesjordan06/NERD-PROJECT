@@ -16,10 +16,18 @@ function LoginContent() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  console.log("=== LOGIN COMPONENT RENDERED ===");
+  console.log("Current error state:", error);
+  console.log("Current loading state:", loading);
+
   useEffect(() => {
     const err = searchParams.get("error");
     if (err) {
-      setError(err);
+      if (err === "AccessDenied") {
+        setError("Google sign-in was cancelled. Please try again or use email/password login.");
+      } else {
+        setError(err);
+      }
     }
   }, [searchParams]);
   
@@ -32,13 +40,17 @@ function LoginContent() {
     console.log('Window location origin:', window.location.origin);
     
     signIn("google", { 
-      callbackUrl: "/",
+      callbackUrl: "/profile",
       redirect: true
     }).then((result) => {
       console.log('=== SIGN IN RESULT ===', result);
       if (result?.error) {
         console.error('Sign in error:', result.error);
-        setError(result.error);
+        if (result.error === "OAuthAccountNotLinked") {
+          setError("This email is already registered with a password. Please sign in with your email and password, or use a different Google account.");
+        } else {
+          setError(result.error);
+        }
         setLoading(false);
       }
     }).catch((error) => {
@@ -49,30 +61,60 @@ function LoginContent() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log("=== HANDLE SUBMIT CALLED ===");
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const res = await signIn("credentials", {
-      redirect: false,
-      email,
-      password,
-    });
+    try {
+      console.log("=== LOGIN ATTEMPT DEBUG ===");
+      console.log("Email:", email);
+      
+      // First check if the user exists and what type of account they have
+      const checkRes = await fetch("/api/check-account-type", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
 
-    setLoading(false);
+      console.log("Check account type response status:", checkRes.status);
 
-    if (res?.error) {
-      if (res.error === "PasswordNotSet") {
-        setError(
-          "You signed up with Google. Please set your password to log in directly."
-        );
+      if (checkRes.ok) {
+        const accountData = await checkRes.json();
+        console.log("Account data:", accountData);
+        
+        if (accountData.accountType === "oauth-only") {
+          console.log("OAuth-only account detected - showing error message");
+          setError("This account was created with Google. Please sign in with Google, or set a password to enable email/password sign-in.");
+          setLoading(false);
+          return;
+        }
       } else {
-        setError("Invalid email or password");
+        console.log("Check account type failed:", checkRes.status);
       }
-      return;
-    }
 
-    router.push("/profile");
+      console.log("Proceeding with normal sign in");
+      // Proceed with normal sign in
+      const res = await signIn("credentials", {
+        redirect: false,
+        email,
+        password,
+      });
+
+      console.log("Sign in result:", res);
+
+      if (res?.error) {
+        setError("Invalid email or password");
+        return;
+      }
+
+      router.push("/profile");
+    } catch (error) {
+      console.error("Login error:", error);
+      setError("An error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -83,9 +125,14 @@ function LoginContent() {
         <div className="p-3 bg-red-100 text-red-800 rounded">
           {error}
           {error.includes("Google") && (
-            <a href="/set-password" className="underline ml-1">
-              Set password
-            </a>
+            <div className="mt-2">
+              <a 
+                href={`/set-password?email=${encodeURIComponent(email)}`} 
+                className="text-blue-600 underline hover:text-blue-800"
+              >
+                Set password for this account
+              </a>
+            </div>
           )}
         </div>
       )}

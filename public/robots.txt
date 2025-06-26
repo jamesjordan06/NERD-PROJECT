@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://interstellarnerd.com
+
+# Sitemaps
+Sitemap: https://interstellarnerd.com/sitemap.xml

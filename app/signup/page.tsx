@@ -16,7 +16,7 @@ export default function SignupPage() {
 
   const handleGoogle = () => {
     setError(null);
-    signIn("google", { callbackUrl: "/" });
+    signIn("google", { callbackUrl: "/profile" });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {

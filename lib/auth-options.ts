@@ -152,6 +152,7 @@ async function ensureUserProfile(
 
   if (!existingProfile) {
     console.log("Creating profile record for user:", userId);
+    
     const profileData = {
       id: generateUUID(),
       user_id: userId,
@@ -176,7 +177,7 @@ async function ensureUserProfile(
   console.log("=== ENSURE USER PROFILE END ===");
 }
 
-async function ensureProfile(user: { id: string; email?: string | null; image?: string | null }) {
+async function ensureProfile(user: { id: string; email?: string | null; image?: string | null; username?: string | null }) {
   const { adminSupabase } = createSupabaseClients();
 
   const { data: existing } = await adminSupabase
@@ -189,9 +190,7 @@ async function ensureProfile(user: { id: string; email?: string | null; image?: 
     const profileData = {
       id: crypto.randomUUID(),
       user_id: user.id,
-      username:
-        user.email?.split("@")[0] ||
-        "user_" + Math.random().toString(36).slice(2, 10),
+      username: user.username || user.email?.split("@")[0] || "user_" + Math.random().toString(36).slice(2, 10),
       avatar_url: user.image ?? null,
       bio: null,
     };
@@ -211,8 +210,65 @@ export const authOptions: NextAuthOptions = {
           prompt: "consent",
           access_type: "offline",
           response_type: "code",
+          scope: "openid email profile",
         },
       },
+      profile(profile) {
+        console.log("=== GOOGLE PROFILE CALLBACK ===");
+        console.log("Raw profile:", profile);
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+        };
+      },
+    }),
+    CredentialsProvider({
+      name: "credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const { supabase } = createSupabaseClients();
+        
+        // Find user by email
+        const { data: user, error } = await supabase
+          .from("users")
+          .select("id, email, hashed_password, name, username, image")
+          .eq("email", credentials.email.toLowerCase().trim())
+          .single();
+
+        if (error || !user) {
+          return null;
+        }
+
+        // Check if user exists but has no password (OAuth-only account)
+        if (!user.hashed_password) {
+          return null; // Return null to indicate invalid credentials
+        }
+
+        // Verify password
+        const isValid = await bcrypt.compare(credentials.password, user.hashed_password);
+        
+        if (!isValid) {
+          return null;
+        }
+
+        // Return user object for NextAuth
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.image,
+          username: user.username,
+        };
+      }
     }),
   ],
   adapter: SupabaseAdapter(createSupabaseClients().supabase),
@@ -306,42 +362,114 @@ export const authOptions: NextAuthOptions = {
       }
     },
     async signIn({ user, account }) {
+      console.log("=== SIGN IN CALLBACK ===");
+      console.log("User:", user);
+      console.log("Account:", account);
+
       if (account?.provider === "google") {
+        console.log("=== OAUTH SIGN IN CALLBACK ===");
+        console.log("User:", user);
+        console.log("Account:", account);
+
         const { data: existingUser, error } = await adminSupabase
           .from("users")
-          .select("id, email, image")
+          .select("id, email, image, hashed_password, username")
           .eq("email", user.email)
           .maybeSingle();
 
-        if (error) return false;
+        if (error) {
+          console.error("Error checking existing user:", error);
+          return false;
+        }
 
         if (existingUser) {
-          await ensureProfile(existingUser);
-          const { data: linked } = await adminSupabase
-            .from("accounts")
-            .select("id")
-            .match({
-              provider: "google",
-              provider_account_id: account.providerAccountId,
-            })
-            .maybeSingle();
+          console.log("Existing user found:", existingUser);
+          
+          // If user has a password, this is an email/password account
+          if (existingUser.hashed_password) {
+            console.log("User has password - linking OAuth account");
+            
+            // Check if OAuth account is already linked
+            const { data: linkedAccount } = await adminSupabase
+              .from("accounts")
+              .select("id")
+              .match({
+                provider: "google",
+                provider_account_id: account.providerAccountId,
+                user_id: existingUser.id,
+              })
+              .maybeSingle();
 
-          if (!linked) {
-            await adminSupabase.from("accounts").insert({
-              user_id: existingUser.id,
-              provider: account.provider,
-              provider_account_id: account.providerAccountId,
-              type: account.type,
-              access_token: account.access_token,
-              refresh_token: account.refresh_token,
-              expires_at: account.expires_at,
-              token_type: account.token_type,
-              scope: account.scope,
-              id_token: account.id_token,
-              session_state: account.session_state,
-            });
+            if (!linkedAccount) {
+              console.log("Linking OAuth account to existing user");
+              // Link the OAuth account to the existing user
+              const { error: linkError } = await adminSupabase
+                .from("accounts")
+                .insert({
+                  id: crypto.randomUUID(), // Generate ID for accounts table
+                  user_id: existingUser.id,
+                  provider: account.provider,
+                  provider_account_id: account.providerAccountId,
+                  type: account.type,
+                  access_token: account.access_token,
+                  refresh_token: account.refresh_token,
+                  expires_at: account.expires_at,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                  session_state: account.session_state,
+                });
+
+              if (linkError) {
+                console.error("Error linking OAuth account:", linkError);
+                return false;
+              }
+            } else {
+              console.log("OAuth account already linked");
+            }
+          } else {
+            console.log("User exists but no password - OAuth-only account");
           }
+
+          await ensureProfile(existingUser);
           return true;
+        } else {
+          console.log("No existing user found - creating new OAuth account");
+          
+          // Generate random username for new OAuth user
+          const generateRandomUsername = () => {
+            const adjectives = ['swift', 'bright', 'cosmic', 'stellar', 'lunar', 'solar', 'neon', 'cyber', 'quantum', 'nebula', 'pulsar', 'nova', 'galaxy', 'orbit', 'cosmos', 'astro'];
+            const nouns = ['star', 'pilot', 'explorer', 'voyager', 'traveler', 'wanderer', 'seeker', 'finder', 'discoverer', 'creator', 'builder', 'maker', 'dreamer', 'thinker', 'adventurer', 'hero', 'legend', 'champion', 'warrior', 'knight'];
+            
+            const randomAdjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+            const randomNoun = nouns[Math.floor(Math.random() * nouns.length)];
+            const randomNumber = Math.floor(Math.random() * 999) + 1;
+            
+            return `${randomAdjective}_${randomNoun}_${randomNumber}`;
+          };
+
+          // Generate unique username
+          let username = generateRandomUsername();
+          let attempts = 0;
+          const maxAttempts = 10;
+          
+          while (attempts < maxAttempts) {
+            const { data: existingUserWithUsername } = await adminSupabase
+              .from("users")
+              .select("id")
+              .eq("username", username)
+              .maybeSingle();
+            
+            if (!existingUserWithUsername) break;
+            
+            username = generateRandomUsername();
+            attempts++;
+          }
+
+          console.log("Generated username for new OAuth user:", username);
+          
+          // Update the user object with the generated username
+          (user as any).username = username;
         }
       }
       return true;

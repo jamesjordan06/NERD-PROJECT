@@ -112,14 +112,15 @@ export function SupabaseAdapter(supabase: SupabaseClient): Adapter {
       console.log('createUser called with:', {
         id: user.id,
         email: user.email,
-        name: user.name
+        name: user.name,
+        username: user.username
       });
 
       // Generate UUID for user if not provided
       const userId = user.id || generateUUID();
       
-      // Generate username from email
-      const username = user.email?.split('@')[0] || `user_${Date.now()}`;
+      // Use provided username or generate from email
+      const username = user.username || user.email?.split('@')[0] || `user_${Date.now()}`;
 
       const userData = {
         name: user.name,
