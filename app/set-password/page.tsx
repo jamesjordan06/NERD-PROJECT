@@ -2,13 +2,14 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { useEffect, useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 
 function SetPasswordContent() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [success, setSuccess] = useState(false);
   const [password, setPassword] = useState("");
@@ -205,7 +206,7 @@ function SetPasswordContent() {
         } else {
           // If auto-login fails, redirect to login page
           setTimeout(() => {
-            router.push(`/login?callbackUrl=${router.asPath}`);
+            router.push(`/login?callbackUrl=${pathname}`);
           }, 1500);
         }
       }

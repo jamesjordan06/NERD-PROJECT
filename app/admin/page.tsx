@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { 
   Plus, 
@@ -45,6 +45,7 @@ interface AdminStats {
 export default function AdminDashboard() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [posts, setPosts] = useState<Post[]>([]);
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
@@ -57,7 +58,7 @@ export default function AdminDashboard() {
     if (status === "loading") return;
     
     if (!session) {
-      router.push(`/login?callbackUrl=${router.asPath}`);
+      router.push(`/login?callbackUrl=${pathname}`);
       return;
     }
 

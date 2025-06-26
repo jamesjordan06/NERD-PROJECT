@@ -2,12 +2,13 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ResetPasswordPage() {
   const supabase = useMemo(() => createClientComponentClient(), []);
   const router = useRouter();
+  const pathname = usePathname();
 
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
@@ -26,7 +27,7 @@ export default function ResetPasswordPage() {
       setStatus("error");
     } else {
       setStatus("success");
-      setTimeout(() => router.push(`/login?callbackUrl=${router.asPath}`), 2000);
+      setTimeout(() => router.push(`/login?callbackUrl=${pathname}`), 2000);
     }
   };
 

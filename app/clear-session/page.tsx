@@ -1,11 +1,12 @@
 "use client";
 
 import { signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect } from "react";
 
 export default function ClearSessionPage() {
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     const clearSession = async () => {
@@ -17,10 +18,10 @@ export default function ClearSessionPage() {
         await signOut({ redirect: false });
         
         // Redirect to login
-        router.push(`/login?callbackUrl=${router.asPath}`);
+        router.push(`/login?callbackUrl=${pathname}`);
       } catch (error) {
         console.error("Error clearing session:", error);
-        router.push(`/login?callbackUrl=${router.asPath}`);
+        router.push(`/login?callbackUrl=${pathname}`);
       }
     };
 

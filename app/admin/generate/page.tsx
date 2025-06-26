@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Sparkles, Eye, Edit, Save, RotateCcw } from "lucide-react";
 
@@ -32,6 +32,7 @@ interface GeneratedContent {
 export default function GenerateContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
   const [category, setCategory] = useState("");
   const [customPrompt, setCustomPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
@@ -43,7 +44,7 @@ export default function GenerateContent() {
     if (status === "loading") return;
     
     if (!session) {
-      router.push(`/login?callbackUrl=${router.asPath}`);
+      router.push(`/login?callbackUrl=${pathname}`);
       return;
     }
 
