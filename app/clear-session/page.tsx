@@ -17,10 +17,10 @@ export default function ClearSessionPage() {
         await signOut({ redirect: false });
         
         // Redirect to login
-        router.push("/login");
+        router.push(`/login?callbackUrl=${router.asPath}`);
       } catch (error) {
         console.error("Error clearing session:", error);
-        router.push("/login");
+        router.push(`/login?callbackUrl=${router.asPath}`);
       }
     };
 

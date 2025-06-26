@@ -9,56 +9,12 @@ import Features from "../components/Features";
 import PostList from "../components/PostList";
 import { fetchPosts } from "../lib/posts";
 import CTA from "../components/CTA";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
 
 export default function Page() {
   const { data: session, status } = useSession();
   const [posts, setPosts] = useState([]);
-
-  useEffect(() => {
-    // Debug session token
-    const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-      const [key, value] = cookie.trim().split('=');
-      acc[key] = value;
-      return acc;
-    }, {} as Record<string, string>);
-    
-    console.log('=== CLIENT SIDE DEBUG ===');
-    console.log('All cookies:', cookies);
-    console.log('Session token cookie:', cookies['next-auth.session-token']);
-    console.log('Session token cookie length:', cookies['next-auth.session-token']?.length);
-    console.log('Session status:', status);
-    console.log('Session data:', session);
-    console.log('Session user:', session?.user);
-    
-    // Check if session token exists
-    if (cookies['next-auth.session-token']) {
-      console.log('Session token found in cookies');
-    } else {
-      console.log('No session token found in cookies');
-      console.log('Available cookie names:', Object.keys(cookies));
-    }
-
-    // Test debug-cookies API
-    fetch('/api/debug-cookies')
-      .then(response => {
-        console.log('Debug-cookies API response status:', response.status);
-        return response.text();
-      })
-      .then(text => {
-        console.log('Debug-cookies API response text:', text);
-        try {
-          const data = JSON.parse(text);
-          console.log('Debug-cookies API parsed data:', data);
-        } catch (e) {
-          console.log('Failed to parse debug-cookies API response:', e);
-        }
-      })
-      .catch(error => {
-        console.log('Debug-cookies API error:', error);
-      });
-  }, [session, status]);
 
   return (
     <div>

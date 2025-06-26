@@ -205,7 +205,7 @@ function SetPasswordContent() {
         } else {
           // If auto-login fails, redirect to login page
           setTimeout(() => {
-            router.push("/login");
+            router.push(`/login?callbackUrl=${router.asPath}`);
           }, 1500);
         }
       }
