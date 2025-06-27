@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function SetPasswordForm({
   email,
@@ -12,6 +13,7 @@ export default function SetPasswordForm({
   unauth?: boolean;
 }) {
   const router = useRouter();
+  const { update } = useSession();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [loading, setLoading] = useState(false);
@@ -42,6 +44,7 @@ export default function SetPasswordForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to set password");
 
+      await update();
       toast.success("Password successfully set!");
       setTimeout(() => router.push("/"), 2000);
     } catch (err: any) {
@@ -53,6 +56,9 @@ export default function SetPasswordForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      <p className="text-sm text-gray-300">
+        It looks like you signed up using Google. Set a password below so you can log in with your email and password.
+      </p>
       <div>
         <label htmlFor="email" className="text-sm block mb-1">
           Email
