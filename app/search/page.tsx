@@ -3,11 +3,11 @@ import PostList from "../../components/PostList";
 import { Search } from "lucide-react";
 
 interface SearchPageProps {
-  searchParams: Promise<{ q?: string }>;
+  searchParams: { q?: string };
 }
 
 export default async function SearchPage({ searchParams }: SearchPageProps) {
-  const { q: queryParam } = await searchParams;
+  const { q: queryParam } = searchParams;
   const query = queryParam || "";
   const allPosts = (await fetchPosts(0, 100)) ?? [];
   
