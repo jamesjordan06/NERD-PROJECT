@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   }
 
   const token = crypto.randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
 
   // Remove existing tokens for user
   await supabase.from("password_reset_tokens").delete().eq("user_id", user.id);
@@ -57,8 +57,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Database error" }, { status: 500 });
   }
 
-  const site = process.env.NEXT_PUBLIC_SITE_URL || "https://interstellarnerd.com";
-  const link = `${site}/set-password?token=${token}`;
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL || "https://nerd-project.vercel.app";
+  const link = `${siteUrl}/set-password?token=${token}`;
 
   try {
     await resend.emails.send({
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
       html: `
         <h1>Set Your Password</h1>
         <p>We received a request to add a password to your account.</p>
-        <p>Click the link below to create one. This link expires in one hour.</p>
+        <p>Click the link below to create one. This link will expire in 15 minutes.</p>
         <p><a href="${link}">Set Password</a></p>
       `,
     });

@@ -53,7 +53,9 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Database error" }, { status: 500 });
     }
 
-    const link = `https://interstellarnerd.com/set-password?token=${token}`;
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://nerd-project.vercel.app";
+    const link = `${siteUrl}/set-password?token=${token}`;
 
     await resend.emails.send({
       from: "Interstellar Nerd <noreply@interstellarnerd.com>",
