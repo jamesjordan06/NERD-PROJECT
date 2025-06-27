@@ -6,6 +6,7 @@ export const dynamic = "force-dynamic";
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 
 function LoginContent() {
@@ -71,10 +72,22 @@ function LoginContent() {
 
       const { accountType } = await checkRes.json();
 
-      // 2️⃣  Redirect OAuth-only users to set-password page
+      // 2️⃣  OAuth-only user → send password setup email
       if (accountType === "oauth-only") {
-        router.push(`/set-password?email=${encodeURIComponent(email)}`);
-        return;                    // ⛔️ do NOT call signIn()
+        const sendRes = await fetch("/api/send-set-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        });
+
+        if (sendRes.ok) {
+          toast.success("Check your email for a link to set your password");
+          router.push("/");
+        } else {
+          const data = await sendRes.json();
+          setError(data.error || "Failed to send email");
+        }
+        return; // ⛔️ do NOT call signIn()
       }
 
       // 3️⃣  Optionally handle "none" (no account)
