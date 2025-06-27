@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import Link from "next/link";
 
 interface Post {
   id: string;
@@ -34,7 +33,7 @@ export default function Features({ posts }: FeaturesProps) {
               transition={{ type: "spring", stiffness: 300 }}
               className="bg-spacex border border-white/10 p-6 rounded-xl shadow-lg hover:border-primary/30 transition-all duration-300"
             >
-              <Link href={`/insights/${post.slug}`}>
+              <div>
                 {post.image_url && (
                   <div className="h-32 w-full overflow-hidden rounded-lg mb-4">
                     <img
@@ -57,7 +56,7 @@ export default function Features({ posts }: FeaturesProps) {
                     {new Date(post.published_at).toLocaleDateString()}
                   </span>
                 )}
-              </Link>
+              </div>
             </motion.div>
           ))}
         </div>

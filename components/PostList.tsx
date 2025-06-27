@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { Post } from "../lib/posts";
 
 export default function PostList({ posts }: { posts: Post[] }) {
@@ -12,9 +11,8 @@ export default function PostList({ posts }: { posts: Post[] }) {
           : "";
 
         return (
-          <Link
+          <div
             key={post.slug}
-            href={`/insights/${post.slug}`}
             className="block group bg-spacex border border-white/10 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:border-primary/30"
           >
             {imageUrl ? (
@@ -36,12 +34,10 @@ export default function PostList({ posts }: { posts: Post[] }) {
                 </p>
               )}
               {formattedDate && (
-                <span className="text-sm text-gray-500">
-                  {formattedDate}
-                </span>
+                <span className="text-sm text-gray-500">{formattedDate}</span>
               )}
             </div>
-          </Link>
+          </div>
         );
       })}
     </div>
