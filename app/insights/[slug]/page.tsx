@@ -3,9 +3,13 @@
 import { Metadata } from "next";
 import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
+interface PageParams {
+  slug: string;
+}
+
 // Generate the list of slugs at build time so Next.js
 // can properly type the `params` prop for this route
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
+export async function generateStaticParams(): Promise<PageParams[]> {
   try {
     const posts = await fetchPosts(0, 100);
     return posts.map((post) => ({ slug: post.slug }));
@@ -18,7 +22,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 export async function generateMetadata({
   params,
 }: {
-  params: { slug: string };
+  params: PageParams;
 }): Promise<Metadata> {
   const { slug } = params;
   const post = await fetchPostBySlug(slug);
@@ -32,7 +36,7 @@ export async function generateMetadata({
 export default async function PostPage({
   params,
 }: {
-  params: { slug: string };
+  params: PageParams;
 }): Promise<JSX.Element> {
   const { slug } = params;
   const post = await fetchPostBySlug(slug);
