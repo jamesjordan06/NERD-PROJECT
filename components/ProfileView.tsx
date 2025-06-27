@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "next-auth/react";
 import { Edit3, Save, X, User, Calendar, MessageSquare, FileText, Globe, Mail, Lock, Upload, Camera } from "lucide-react";
+import PasswordInput from "@/components/PasswordInput";
 
 interface Profile {
   id: string;
@@ -342,8 +343,7 @@ export default function ProfileView({
                 <label className="block text-sm font-medium text-spacex-gray mb-2">
                   Current Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={currentPassword}
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   className="w-full p-3 rounded-lg bg-background border border-white/10 text-white focus:border-primary focus:outline-none"
@@ -353,8 +353,7 @@ export default function ProfileView({
                 <label className="block text-sm font-medium text-spacex-gray mb-2">
                   New Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
                   className="w-full p-3 rounded-lg bg-background border border-white/10 text-white focus:border-primary focus:outline-none"
@@ -364,8 +363,7 @@ export default function ProfileView({
                 <label className="block text-sm font-medium text-spacex-gray mb-2">
                   Confirm New Password
                 </label>
-                <input
-                  type="password"
+                <PasswordInput
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full p-3 rounded-lg bg-background border border-white/10 text-white focus:border-primary focus:outline-none"

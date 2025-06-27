@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { FcGoogle } from "react-icons/fc";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -89,16 +90,14 @@ export default function SignupPage() {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
-        <input
-          type="password"
+        <PasswordInput
           placeholder="Password"
           className="p-2 w-full rounded text-black"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
-        <input
-          type="password"
+        <PasswordInput
           placeholder="Confirm Password"
           className="p-2 w-full rounded text-black"
           value={confirmPassword}

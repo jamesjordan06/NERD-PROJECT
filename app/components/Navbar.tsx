@@ -6,7 +6,7 @@ import { LOGO_URL } from "@/lib/assets";
 import { usePathname, useRouter } from "next/navigation";
 import { Menu, Search } from "lucide-react";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
@@ -14,6 +14,9 @@ export default function Navbar() {
   const user = session?.user;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
   const [search, setSearch] = useState("");
   const router = useRouter();
   const showSearch = pathname === "/";

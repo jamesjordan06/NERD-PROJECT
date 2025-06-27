@@ -4,6 +4,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function ResetPasswordPage() {
   const supabase = useMemo(() => createClientComponentClient(), []);
@@ -36,8 +37,7 @@ export default function ResetPasswordPage() {
       <h1 className="text-2xl font-bold mb-4">Set New Password</h1>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          type="password"
+        <PasswordInput
           placeholder="New password"
           className="p-2 w-full rounded text-black"
           value={password}
