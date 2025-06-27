@@ -1,7 +1,7 @@
 import PostCard from "../../../../components/PostCard";
 import { fetchPosts } from "../../../../lib/posts";
 import { notFound } from "next/navigation";
-import type { PageProps } from "@/types/page-props";
+import type { PageProps } from "next";
 
 // Explicitly export an empty `generateStaticParams` to signal that this
 // route is fully dynamic. This keeps Next.js from typing the `params`
