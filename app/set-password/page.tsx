@@ -10,17 +10,14 @@ export async function generateStaticParams(): Promise<never[]> {
   return [];
 }
 
-export default async function SetPasswordPage({
-  searchParams,
-}: {
-  searchParams: { token?: string };
-}) {
+export default async function SetPasswordPage(req: Request) {
+  const url = new URL(req.url);
+  const token = url.searchParams.get("token") ?? undefined;
+
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
   });
-
-  const { token } = searchParams;
 
   if (session?.user?.email) {
     return (
