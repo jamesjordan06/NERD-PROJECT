@@ -1,10 +1,10 @@
 import { fetchPosts } from "../../lib/posts";
 import PostList from "../../components/PostList";
 import { Search } from "lucide-react";
-import type { PageProps } from "@/types/page-props";
+import type { RouteProps } from "@/types/route-props";
 
 // Export an empty `generateStaticParams` so Next.js does not treat the
-// `searchParams` prop as a Promise. This keeps the `PageProps` helper type
+// `searchParams` prop as a Promise. This keeps the `RouteProps` helper type
 // usable without build errors.
 export async function generateStaticParams(): Promise<Record<string, never>[]> {
   return [];
@@ -12,7 +12,7 @@ export async function generateStaticParams(): Promise<Record<string, never>[]> {
 
 export default async function SearchPage({
   searchParams,
-}: PageProps<{}, { q?: string }>) {
+}: RouteProps<{}, { q?: string }>) {
   const { q: queryParam } = searchParams;
   const query = queryParam || "";
   const allPosts = (await fetchPosts(0, 100)) ?? [];
