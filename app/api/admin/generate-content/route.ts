@@ -41,16 +41,6 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-// Categories for content generation
-const CATEGORIES = [
-  "Space News",
-  "Astronomy",
-  "Astrophysics",
-  "Cosmology",
-  "Planetary Science",
-  "Space Technology",
-  "Space Exploration"
-];
 
 // Check for duplicate topics
 async function checkDuplicateTopics(title: string): Promise<boolean> {
@@ -137,7 +127,12 @@ export async function POST(request: NextRequest) {
 
     const { category, customPrompt } = await request.json();
 
-    if (!category || !CATEGORIES.includes(category)) {
+    const { data: categoriesData } = await supabase
+      .from("categories")
+      .select("name");
+
+    const categoryNames = categoriesData?.map(c => c.name);
+    if (!category || !categoryNames?.includes(category)) {
       return NextResponse.json({ error: "Invalid category" }, { status: 400 });
     }
 

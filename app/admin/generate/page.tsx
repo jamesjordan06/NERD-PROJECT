@@ -5,21 +5,6 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Sparkles, Eye, Edit, Save, RotateCcw } from "lucide-react";
 
-const CATEGORIES = [
-  "Space News",
-  "Astronomy",
-  "Astrophysics",
-  "Cosmology",
-  "Planetary Science",
-  "Space Technology",
-  "Space Exploration",
-  "Exoplanets",
-  "Black Holes",
-  "Galaxies",
-  "Solar System",
-  "Space Missions",
-];
-
 interface GeneratedContent {
   title: string;
   content: string;
@@ -42,6 +27,7 @@ export default function GenerateContent() {
   const [saving, setSaving] = useState(false);
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [highlightCategory, setHighlightCategory] = useState(false);
+  const [availableCategories, setAvailableCategories] = useState<string[]>([]);
 
   // Consider persisting `category` and `customPrompt` across reloads using
   // localStorage or URL search params.
@@ -58,6 +44,22 @@ export default function GenerateContent() {
       checkAdminStatus();
     }
   }, [session, status, router]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/categories");
+        const data = await res.json();
+        setAvailableCategories(data.categories);
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    };
+
+    fetchCategories();
+  }, [session]);
 
   const checkAdminStatus = async () => {
     try {
@@ -207,7 +209,7 @@ export default function GenerateContent() {
                   className={`w-full px-3 py-2 border ${highlightCategory ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
                 >
                   <option value="">Select a category</option>
-                  {CATEGORIES.map((cat) => (
+                  {availableCategories.map((cat) => (
                     <option key={cat} value={cat}>
                       {cat}
                     </option>
