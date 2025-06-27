@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 import { useSession, signIn } from "next-auth/react";
+import PasswordInput from "@/components/PasswordInput";
 
 export default function SetPasswordForm({
   email,
@@ -83,9 +84,8 @@ export default function SetPasswordForm({
         <label htmlFor="password" className="sr-only">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
@@ -97,9 +97,8 @@ export default function SetPasswordForm({
         <label htmlFor="confirm" className="sr-only">
           Confirm Password
         </label>
-        <input
+        <PasswordInput
           id="confirm"
-          type="password"
           value={confirm}
           onChange={(e) => setConfirm(e.target.value)}
           required

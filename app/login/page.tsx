@@ -8,6 +8,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { toast } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
+import PasswordInput from "@/components/PasswordInput";
 
 function LoginContent() {
   const router = useRouter();
@@ -202,9 +203,8 @@ function LoginContent() {
         <label htmlFor="password" className="sr-only">
           Password
         </label>
-        <input
+        <PasswordInput
           id="password"
-          type="password"
           placeholder="Password"
           className="p-2 w-full rounded text-black"
           value={password}
