@@ -5,19 +5,16 @@ const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export async function POST(req: Request) {
   try {
-    const { email, link } = await req.json();
+    const { email, token } = await req.json();
 
-    if (
-      !email ||
-      !link ||
-      typeof email !== "string" ||
-      typeof link !== "string"
-    ) {
+    if (!email || !token || typeof email !== "string" || typeof token !== "string") {
       return NextResponse.json(
-        { error: "Missing email or link" },
+        { error: "Missing email or token" },
         { status: 400 },
       );
     }
+
+    const link = `https://interstellarnerd.com/set-password?token=${token}`;
 
     try {
       await resend.emails.send({
@@ -26,7 +23,6 @@ export async function POST(req: Request) {
         subject: "Reset Your Password",
         html: `<p>Click <a href="${link}">here</a> to reset your password.</p>`,
         text: `Reset your password using this link: ${link}`,
-        disableLinkTracking: true,
       });
     } catch (err) {
       console.error("request-password-reset email error:", err);
