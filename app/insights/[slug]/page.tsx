@@ -1,31 +1,36 @@
 // app/insights/[slug]/page.tsx
-import type { Metadata } from "next";
-import type { PageProps } from "@/types/page-props";
+
+import { Metadata } from "next";
 import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
-export async function generateStaticParams(): Promise<{ slug: string }[]> {
+export async function generateStaticParams() {
   try {
     const posts = await fetchPosts(0, 100);
     return posts.map((post) => ({ slug: post.slug }));
   } catch (error) {
-    console.error("Error generating static params:", error);
+    console.error("Error generating static params for posts:", error);
     return [];
   }
 }
 
 export async function generateMetadata({
   params,
-}: PageProps<{ slug: string }>): Promise<Metadata> {
+}: {
+  params: { slug: string };
+}): Promise<Metadata> {
   const post = await fetchPostBySlug(params.slug);
+  if (!post) return { title: "Post not found" };
   return {
-    title: post?.title || "Post not found",
-    description: post?.excerpt || undefined,
+    title: post.title,
+    description: post.excerpt || undefined,
   };
 }
 
-export default async function Page({
+export default async function PostPage({
   params,
-}: PageProps<{ slug: string }>): Promise<JSX.Element> {
+}: {
+  params: { slug: string };
+}) {
   const post = await fetchPostBySlug(params.slug);
 
   if (!post) {
@@ -35,6 +40,7 @@ export default async function Page({
   return (
     <article className="prose prose-invert mx-auto py-10 px-4">
       <h1>{post.title}</h1>
+
       {post.image_url && (
         <img
           src={post.image_url}
@@ -42,7 +48,9 @@ export default async function Page({
           className="rounded-lg my-6 w-full"
         />
       )}
+
       <div dangerouslySetInnerHTML={{ __html: post.body || "" }} />
+
       <footer className="mt-12 flex items-center space-x-4 text-sm text-gray-400">
         {post.authorImage && (
           <img
