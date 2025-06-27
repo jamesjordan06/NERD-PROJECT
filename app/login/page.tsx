@@ -143,9 +143,9 @@ function LoginContent() {
             <div className="mt-2">
               <a
                 href={`/set-password?email=${encodeURIComponent(email)}`}
-                className="text-blue-600 underline hover:text-blue-800"
+                className="inline-block mt-2 px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 transition"
               >
-                Set password for this account
+                Set Password for This Account
               </a>
             </div>
           )}
