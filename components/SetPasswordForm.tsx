@@ -3,14 +3,16 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 
 export default function SetPasswordForm({
   email,
   unauth = false,
+  token,
 }: {
   email: string;
   unauth?: boolean;
+  token?: string;
 }) {
   const router = useRouter();
   const { update } = useSession();
@@ -34,8 +36,10 @@ export default function SetPasswordForm({
     setLoading(true);
 
     try {
-      const endpoint = unauth ? "/api/set-password-unauth" : "/api/set-password";
-      const body = unauth ? { email, password } : { password };
+      const endpoint = unauth
+        ? "/api/set-password-unauth"
+        : "/api/set-password";
+      const body = unauth ? { token, password } : { password };
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,10 +47,13 @@ export default function SetPasswordForm({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to set password");
-
-      await update();
+      if (unauth) {
+        await signIn("credentials", { redirect: false, email, password });
+      } else {
+        await update();
+      }
       toast.success("Password successfully set!");
-      setTimeout(() => router.push("/"), 2000);
+      router.push("/");
     } catch (err: any) {
       toast.error(err.message || "Failed to set password");
     } finally {
@@ -57,7 +64,8 @@ export default function SetPasswordForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <p className="text-sm text-gray-300">
-        It looks like you signed up using Google. Set a password below so you can log in with your email and password.
+        It looks like you signed up using Google. Set a password below so you
+        can log in with your email and password.
       </p>
       <div>
         <label htmlFor="email" className="text-sm block mb-1">
