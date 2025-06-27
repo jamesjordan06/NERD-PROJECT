@@ -5,7 +5,7 @@ import { authOptions } from "../../lib/auth-options";
 import SetPasswordForm from "../../components/SetPasswordForm";
 import InvalidTokenNotice from "../../components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
-import type { PageProps } from "next";
+import type { PageProps } from "@/types/page-props";
 
 export async function generateStaticParams(): Promise<Record<string, never>[]> {
   return [];
