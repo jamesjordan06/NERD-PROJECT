@@ -16,40 +16,65 @@ function LoginContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
+  const [showSetPasswordPrompt, setShowSetPasswordPrompt] = useState(false);
 
   useEffect(() => {
     const err = searchParams.get("error");
     if (err) {
       if (err === "AccessDenied") {
-        setError("Google sign-in was cancelled. Please try again or use email/password login.");
+        setError(
+          "Google sign-in was cancelled. Please try again or use email/password login."
+        );
       } else {
         setError(err);
       }
     }
   }, [searchParams]);
-  
+
   const handleGoogle = () => {
     setLoading(true);
-    
-    signIn("google", { 
+
+    signIn("google", {
       callbackUrl: "/profile",
-      redirect: true
-    }).then((result) => {
-      if (result?.error) {
-        console.error('Sign in error:', result.error);
-        if (result.error === "OAuthAccountNotLinked") {
-          setError("This email is already registered with a password. Please sign in with your email and password, or use a different Google account.");
-        } else {
-          setError(result.error);
+      redirect: true,
+    })
+      .then((result) => {
+        if (result?.error) {
+          console.error("Sign in error:", result.error);
+          if (result.error === "OAuthAccountNotLinked") {
+            setError(
+              "This email is already registered with a password. Please sign in with your email and password, or use a different Google account."
+            );
+          } else {
+            setError(result.error);
+          }
+          setLoading(false);
         }
+      })
+      .catch((error) => {
+        console.error("=== SIGN IN ERROR ===", error);
+        setError(error.message || "Sign in failed");
         setLoading(false);
-      }
-    }).catch((error) => {
-      console.error('=== SIGN IN ERROR ===', error);
-      setError(error.message || 'Sign in failed');
+      });
+  };
+
+  const handleSendLink = async () => {
+    setLoading(true);
+    try {
+      const sendRes = await fetch("/api/send-set-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await sendRes.json();
+      if (!sendRes.ok) throw new Error(data.error || "Failed to send email");
+      toast.success("Link sent");
+      setShowSetPasswordPrompt(false);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to send email");
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -72,21 +97,10 @@ function LoginContent() {
 
       const { accountType } = await checkRes.json();
 
-      // 2️⃣  OAuth-only user → send password setup email
+      // 2️⃣  OAuth-only user → show prompt to send password link
       if (accountType === "oauth-only") {
-        const sendRes = await fetch("/api/send-set-password", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
-        });
-
-        if (sendRes.ok) {
-          toast.success("Check your email for a link to set your password");
-          router.push("/");
-        } else {
-          const data = await sendRes.json();
-          setError(data.error || "Failed to send email");
-        }
+        setShowSetPasswordPrompt(true);
+        setLoading(false);
         return; // ⛔️ do NOT call signIn()
       }
 
@@ -126,14 +140,31 @@ function LoginContent() {
           {error}
           {error.includes("Google") && (
             <div className="mt-2">
-              <a 
-                href={`/set-password?email=${encodeURIComponent(email)}`} 
+              <a
+                href={`/set-password?email=${encodeURIComponent(email)}`}
                 className="text-blue-600 underline hover:text-blue-800"
               >
                 Set password for this account
               </a>
             </div>
           )}
+        </div>
+      )}
+
+      {showSetPasswordPrompt && (
+        <div className="p-3 bg-yellow-100 text-yellow-800 rounded space-y-2">
+          <p>
+            We found your account. It was created using Google OAuth and doesn't
+            have a password. Would you like to set one?
+          </p>
+          <button
+            type="button"
+            onClick={handleSendLink}
+            className="bg-neon text-white px-3 py-1 rounded"
+            disabled={loading}
+          >
+            {loading ? "Sending..." : "Send Link"}
+          </button>
         </div>
       )}
 
@@ -154,7 +185,9 @@ function LoginContent() {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        <label htmlFor="email" className="sr-only">Email</label>
+        <label htmlFor="email" className="sr-only">
+          Email
+        </label>
         <input
           id="email"
           type="email"
@@ -166,7 +199,9 @@ function LoginContent() {
           required
           autoComplete="email"
         />
-        <label htmlFor="password" className="sr-only">Password</label>
+        <label htmlFor="password" className="sr-only">
+          Password
+        </label>
         <input
           id="password"
           type="password"
