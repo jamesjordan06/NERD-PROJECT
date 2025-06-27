@@ -1,18 +1,22 @@
 import PostCard from "../../../../components/PostCard";
 import { fetchPosts } from "../../../../lib/posts";
 import { notFound } from "next/navigation";
-// Using the generic PageProps type here results in Next.js inferring that
-// `params` is a Promise because this route does not export
-// `generateStaticParams`. Explicitly typing the params object keeps the
-// function signature simple and avoids type errors during the build.
+import type { PageProps } from "next";
+
+// Explicitly export an empty `generateStaticParams` to signal that this
+// route is fully dynamic. This keeps Next.js from typing the `params`
+// argument as a Promise and allows us to use the `PageProps` helper type
+// without build errors.
+
+export async function generateStaticParams(): Promise<{ page: string }[]> {
+  return [];
+}
 
 export const revalidate = 60;
 
 export default async function InsightsPage({
   params,
-}: {
-  params: { page: string };
-}) {
+}: PageProps<{ page: string }>) {
   const pageNum = Number(params.page);
   if (!Number.isInteger(pageNum) || pageNum < 1) {
     notFound();
