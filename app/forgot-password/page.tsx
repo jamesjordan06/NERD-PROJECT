@@ -2,20 +2,23 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
 export default function ForgotPasswordPage() {
-  const supabase = createClientComponentClient();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<"idle" | "sent" | "error">("idle");
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
-    });
-
-    setStatus(error ? "error" : "sent");
+    try {
+      const res = await fetch("/api/request-password-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      setStatus(res.ok ? "sent" : "error");
+    } catch {
+      setStatus("error");
+    }
   };
 
   return (
