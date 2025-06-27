@@ -1,20 +1,13 @@
 // app/insights/[slug]/page.tsx
-
 import { Metadata } from "next";
 import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
-interface PageParams {
-  slug: string;
-}
-
-// Generate the list of slugs at build time so Next.js
-// can properly type the `params` prop for this route
-export async function generateStaticParams(): Promise<PageParams[]> {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {
     const posts = await fetchPosts(0, 100);
     return posts.map((post) => ({ slug: post.slug }));
   } catch (error) {
-    console.error("Error generating static params for posts:", error);
+    console.error("Error generating static params:", error);
     return [];
   }
 }
@@ -22,24 +15,21 @@ export async function generateStaticParams(): Promise<PageParams[]> {
 export async function generateMetadata({
   params,
 }: {
-  params: PageParams;
+  params: { slug: string };
 }): Promise<Metadata> {
-  const { slug } = params;
-  const post = await fetchPostBySlug(slug);
-  if (!post) return { title: "Post not found" };
+  const post = await fetchPostBySlug(params.slug);
   return {
-    title: post.title,
-    description: post.excerpt || undefined,
+    title: post?.title || "Post not found",
+    description: post?.excerpt || undefined,
   };
 }
 
-export default async function PostPage({
+export default async function Page({
   params,
 }: {
-  params: PageParams;
+  params: { slug: string };
 }): Promise<JSX.Element> {
-  const { slug } = params;
-  const post = await fetchPostBySlug(slug);
+  const post = await fetchPostBySlug(params.slug);
 
   if (!post) {
     return <p className="text-center py-20">Post not found.</p>;
@@ -48,7 +38,6 @@ export default async function PostPage({
   return (
     <article className="prose prose-invert mx-auto py-10 px-4">
       <h1>{post.title}</h1>
-
       {post.image_url && (
         <img
           src={post.image_url}
@@ -56,9 +45,7 @@ export default async function PostPage({
           className="rounded-lg my-6 w-full"
         />
       )}
-
       <div dangerouslySetInnerHTML={{ __html: post.body || "" }} />
-
       <footer className="mt-12 flex items-center space-x-4 text-sm text-gray-400">
         {post.authorImage && (
           <img
