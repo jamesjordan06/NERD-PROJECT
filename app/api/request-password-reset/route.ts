@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "@resend/node";
+import { Resend } from "resend";
 import crypto from "crypto";
 
 const supabase = createClient(
