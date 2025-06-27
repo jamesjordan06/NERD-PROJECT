@@ -36,15 +36,16 @@ export async function POST(req: Request) {
   }
 
   try {
-    const site = process.env.NEXT_PUBLIC_SITE_URL || "https://yourdomain.com";
+    const site =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://nerd-project.vercel.app";
     const link = `${site}/set-password?email=${encodeURIComponent(email)}`;
     await resend.emails.send({
-      from: "Interstellar Nerd <noreply@yourdomain.com>",
+      from: "Interstellar Nerd <noreply@interstellarnerd.com>",
       to: email,
       subject: "Set Your Password for Interstellar Nerd",
       html: `
         <h1>Set Your Password</h1>
-        <p>You signed up using Google OAuth and didn't set a password. Click the link below to set one.</p>
+        <p>You signed up with Google OAuth but didn't create a password. Use the link below to set one now.</p>
         <p><a href="${link}">Set Password</a></p>
       `,
     });
