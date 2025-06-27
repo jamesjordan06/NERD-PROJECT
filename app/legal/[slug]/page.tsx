@@ -1,6 +1,7 @@
 // app/legal/[slug]/page.tsx
 import { fetchLegalPage, fetchLegalPageSlugs } from '../../../lib/posts';
-import { Metadata, type PageProps } from 'next';
+import type { Metadata } from 'next';
+import type { PageProps } from '@/types/page-props';
 
 // 1) Generate all slugs at build time (fetching the string array)
 export async function generateStaticParams(): Promise<{ slug: string }[]> {

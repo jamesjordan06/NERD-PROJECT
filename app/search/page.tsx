@@ -1,7 +1,7 @@
 import { fetchPosts } from "../../lib/posts";
 import PostList from "../../components/PostList";
 import { Search } from "lucide-react";
-import type { PageProps } from "next";
+import type { PageProps } from "@/types/page-props";
 
 // Export an empty `generateStaticParams` so Next.js does not treat the
 // `searchParams` prop as a Promise. This keeps the `PageProps` helper type
