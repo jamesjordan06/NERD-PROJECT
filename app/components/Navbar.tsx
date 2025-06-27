@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { LOGO_URL } from "@/lib/assets";
-import { usePathname, useRouter } from "next/navigation";
-import { Menu, Search } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { Menu } from "lucide-react";
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
@@ -17,14 +17,6 @@ export default function Navbar() {
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
-  const [search, setSearch] = useState("");
-  const router = useRouter();
-  const showSearch = pathname === "/";
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (search.trim())
-      router.push(`/search?q=${encodeURIComponent(search.trim())}`);
-  };
   const linkClasses = (path: string) =>
     pathname === path
       ? "text-neon font-semibold"
@@ -43,30 +35,6 @@ export default function Navbar() {
           />
           <span className="sr-only">Interstellar Nerd</span>
         </Link>
-        {showSearch && (
-          <form
-            onSubmit={handleSearch}
-            className="flex-1 flex justify-center mx-4"
-          >
-            <div className="relative w-full max-w-xs">
-              <input
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search Orbital Insights..."
-                className="w-full px-3 py-1 pr-10 rounded bg-spacex border border-white/10 text-spacex-gray focus:outline-none focus:ring-2 focus:ring-primary text-sm shadow"
-                aria-label="Search Orbital Insights"
-              />
-              <button
-                type="submit"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-spacex-gray"
-                aria-label="Search"
-              >
-                <Search size={16} />
-              </button>
-            </div>
-          </form>
-        )}
         <button
           aria-label="Menu"
           onClick={() => setOpen(!open)}
