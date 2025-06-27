@@ -1,9 +1,9 @@
-// app/set-password/page.tsx
+// ✅ Final fixed version of `app/set-password/page.tsx` using App Router conventions (no PageProps)
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth-options";
-import SetPasswordForm from "@/components/SetPasswordForm";
-import InvalidTokenNotice from "@/components/InvalidTokenNotice";
+import { authOptions } from "../../lib/auth-options";
+import SetPasswordForm from "../../components/SetPasswordForm";
+import InvalidTokenNotice from "../../components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
 
 export async function generateStaticParams(): Promise<never[]> {
@@ -11,13 +11,13 @@ export async function generateStaticParams(): Promise<never[]> {
 }
 
 export default async function SetPasswordPage(req: Request) {
-  const url = new URL(req.url);
-  const token = url.searchParams.get("token") ?? undefined;
-
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
   });
+
+  const url = new URL(req.url);
+  const token = url.searchParams.get("token") ?? undefined;
 
   if (session?.user?.email) {
     return (
