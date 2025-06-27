@@ -7,7 +7,7 @@ import InvalidTokenNotice from "../../components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
 
 interface SetPasswordPageProps {
-  searchParams: Promise<{ token?: string }>;
+  searchParams: { token?: string };
 }
 
 export default async function SetPasswordPage({
@@ -18,7 +18,7 @@ export default async function SetPasswordPage({
     secret: process.env.NEXTAUTH_SECRET,
   });
 
-  const { token } = await searchParams;
+  const { token } = searchParams;
 
   if (session?.user?.email) {
     return (
