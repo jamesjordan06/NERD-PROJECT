@@ -1,6 +1,5 @@
 // app/insights/[slug]/page.tsx
-import type { Metadata } from "next";
-import type { PageProps } from "@/types/page-props";
+import { Metadata, type PageProps } from "next";
 import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
