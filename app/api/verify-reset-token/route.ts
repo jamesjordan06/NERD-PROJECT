@@ -9,27 +9,34 @@ const supabase = createClient(
 export async function POST(req: Request) {
   const { token } = await req.json();
 
+  console.log("🔐 Received token:", token);
+
   if (!token) {
-    return NextResponse.json({ valid: false }, { status: 400 });
+    console.log("❌ No token provided");
+    return NextResponse.json({ valid: false, reason: "missing_token" }, { status: 400 });
   }
 
   const { data, error } = await supabase
     .from("password_reset_tokens")
-    .select("user_id, expires_at")
+    .select("token, user_id, expires_at")
     .eq("token", token)
     .maybeSingle();
 
+  console.log("🧾 Supabase result:", { data, error });
+  console.log("🕒 Current time:", new Date());
+
   if (error || !data) {
-    console.error("Token not found or DB error:", error);
-    return NextResponse.json({ valid: false }, { status: 401 });
+    console.log("❌ Token not found");
+    return NextResponse.json({ valid: false, reason: "not_found" }, { status: 401 });
   }
 
-  const now = new Date();
-  const expiresAt = new Date(data.expires_at);
-
-  if (expiresAt < now) {
-    return NextResponse.json({ valid: false }, { status: 401 });
+  const isExpired = new Date(data.expires_at) < new Date();
+  if (isExpired) {
+    console.log("⚠️ Token is expired:", data.expires_at);
+    return NextResponse.json({ valid: false, reason: "expired" }, { status: 401 });
   }
+
+  console.log("✅ Token is valid, user_id:", data.user_id);
 
   return NextResponse.json({ valid: true, user_id: data.user_id });
 }
