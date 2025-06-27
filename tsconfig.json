@@ -14,11 +14,11 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "types": ["node", "next", "next/navigation"],
-    "plugins": [{"name": "next"}],
-    "baseUrl": ".",               // ✅ Added for path alias
+    "types": ["node"], // ⛔ REMOVE "next", "next/navigation"
+    "plugins": [{ "name": "next" }],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]              // ✅ Alias so @/lib/... works
+      "@/*": ["./*"]
     }
   },
   "include": [
@@ -27,7 +27,5 @@
     "next-env.d.ts",
     ".next/types/**/*.ts"
   ],
-  "exclude": [
-    "node_modules"
-  ]
+  "exclude": ["node_modules"]
 }
