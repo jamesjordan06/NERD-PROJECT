@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { v4 as uuid } from "uuid";
+import crypto from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,13 +32,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const token = uuid();
+    const token = crypto.randomBytes(32).toString("hex");
+    if (!token) {
+      console.error("Failed to generate password reset token");
+      return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
 
     const { error: insertErr } = await supabase
       .from("password_reset_tokens")
       .insert({
-        id: token,
         user_id: user.id,
+        token,
         created_at: new Date().toISOString(),
       });
 
