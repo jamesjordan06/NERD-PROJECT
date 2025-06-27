@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { Resend } from "@resend/client";
+import { Resend } from "resend";
 import { v4 as uuid } from "uuid";
 
 const supabase = createClient(
