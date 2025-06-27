@@ -1,5 +1,5 @@
 // app/insights/[slug]/page.tsx
-import { Metadata } from "next";
+import { Metadata, type PageProps } from "next";
 import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
 export async function generateStaticParams(): Promise<{ slug: string }[]> {
@@ -14,9 +14,7 @@ export async function generateStaticParams(): Promise<{ slug: string }[]> {
 
 export async function generateMetadata({
   params,
-}: {
-  params: { slug: string };
-}): Promise<Metadata> {
+}: PageProps<{ slug: string }>): Promise<Metadata> {
   const post = await fetchPostBySlug(params.slug);
   return {
     title: post?.title || "Post not found",
@@ -26,9 +24,7 @@ export async function generateMetadata({
 
 export default async function Page({
   params,
-}: {
-  params: { slug: string };
-}): Promise<JSX.Element> {
+}: PageProps<{ slug: string }>): Promise<JSX.Element> {
   const post = await fetchPostBySlug(params.slug);
 
   if (!post) {
