@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 export default function SetPasswordForm({
@@ -13,20 +14,18 @@ export default function SetPasswordForm({
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
 
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      toast.error("Passwords do not match.");
       return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+      toast.error("Password must be at least 6 characters long.");
       return;
     }
 
@@ -35,22 +34,18 @@ export default function SetPasswordForm({
     try {
       const endpoint = unauth ? "/api/set-password-unauth" : "/api/set-password";
       const body = unauth ? { email, password } : { password };
-
       const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
-
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to set password");
 
-      if (!res.ok) {
-        throw new Error(data.error || "Failed to set password");
-      }
-
-      router.push("/profile");
+      toast.success("Password successfully set!");
+      setTimeout(() => router.push("/"), 2000);
     } catch (err: any) {
-      setError(err.message || "Failed to set password");
+      toast.error(err.message || "Failed to set password");
     } finally {
       setLoading(false);
     }
@@ -98,7 +93,6 @@ export default function SetPasswordForm({
           className="w-full p-2 rounded text-black"
         />
       </div>
-      {error && <p className="text-red-500">{error}</p>}
       <button
         type="submit"
         disabled={loading}

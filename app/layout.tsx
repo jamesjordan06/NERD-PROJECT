@@ -7,6 +7,7 @@ import Footer from "./components/Footer";
 import type { Metadata } from "next";
 import CookieBanner from "../components/CookieBanner";
 import PasswordSetupRedirect from "../components/PasswordSetupRedirect";
+import { Toaster } from "react-hot-toast";
 
 export const metadata: Metadata = {
   title: "Interstellar Nerd",
@@ -27,6 +28,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Footer />
           <CookieBanner />
         </Providers>
+        <Toaster position="top-right" />
       </body>
     </html>
   );
