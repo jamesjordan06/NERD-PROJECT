@@ -5,7 +5,7 @@ import { fetchPostBySlug, fetchPosts } from "../../../lib/posts";
 
 // Generate the list of slugs at build time so Next.js
 // can properly type the `params` prop for this route
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {
     const posts = await fetchPosts(0, 100);
     return posts.map((post) => ({ slug: post.slug }));
