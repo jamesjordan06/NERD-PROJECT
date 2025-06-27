@@ -1,3 +1,5 @@
+// app/set-password/page.tsx
+
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth-options";
@@ -5,17 +7,13 @@ import SetPasswordForm from "../../components/SetPasswordForm";
 import InvalidTokenNotice from "../../components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
 
-export default async function SetPasswordPage({
-  searchParams,
-}: {
-  searchParams?: { token?: string };
-}) {
+export default async function SetPasswordPage(req: any) {
+  const token = req?.searchParams?.token;
+
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
   });
-
-  const token = searchParams?.token;
 
   if (session?.user?.email) {
     return (
