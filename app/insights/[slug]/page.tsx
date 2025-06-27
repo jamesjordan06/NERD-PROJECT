@@ -28,7 +28,7 @@ export default async function Page({
   params,
 }: {
   params: { slug: string };
-}): Promise<JSX.Element> {
+}) {
   const post = await fetchPostBySlug(params.slug);
 
   if (!post) {
