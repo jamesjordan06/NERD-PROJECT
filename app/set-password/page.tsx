@@ -1,12 +1,12 @@
 // app/set-password/page.tsx
 import { redirect } from "next/navigation";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../lib/auth-options";
-import SetPasswordForm from "../../components/SetPasswordForm";
-import InvalidTokenNotice from "../../components/InvalidTokenNotice";
+import { authOptions } from "@/lib/auth-options";
+import SetPasswordForm from "@/components/SetPasswordForm";
+import InvalidTokenNotice from "@/components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
 
-export async function generateStaticParams(): Promise<Record<string, never>[]> {
+export async function generateStaticParams(): Promise<never[]> {
   return [];
 }
 
@@ -25,9 +25,7 @@ export default async function SetPasswordPage({
   if (session?.user?.email) {
     return (
       <div className="max-w-md mx-auto py-12 space-y-6">
-        <h1 className="text-3xl font-orbitron text-center">
-          Set Your Password
-        </h1>
+        <h1 className="text-3xl font-orbitron text-center">Set Your Password</h1>
         <SetPasswordForm email={session.user.email} />
       </div>
     );
