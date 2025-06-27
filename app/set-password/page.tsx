@@ -35,22 +35,19 @@ export default async function SetPasswordPage({
     redirect("/login");
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  const verifyRes = await fetch(
+    `${process.env.NEXT_PUBLIC_SITE_URL}/api/verify-reset-token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token }),
+      cache: "no-store",
+    }
   );
 
-  const { data: tokenRow } = await supabase
-    .from("verification_tokens")
-    .select("identifier, expires")
-    .eq("token", token!)
-    .maybeSingle();
+  const verifyData = await verifyRes.json();
 
-  if (
-    !tokenRow ||
-    !tokenRow.identifier.startsWith("set-password:") ||
-    new Date(tokenRow.expires).getTime() < Date.now()
-  ) {
+  if (!verifyRes.ok || !verifyData.valid) {
     return (
       <div className="max-w-md mx-auto py-12">
         <InvalidTokenNotice />
@@ -58,12 +55,15 @@ export default async function SetPasswordPage({
     );
   }
 
-  const userId = tokenRow.identifier.replace("set-password:", "");
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
   const { data: user } = await supabase
     .from("users")
     .select("email, hashed_password")
-    .eq("id", userId)
+    .eq("id", verifyData.user_id)
     .maybeSingle();
 
   if (!user || user.hashed_password) {

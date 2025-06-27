@@ -61,7 +61,7 @@ function LoginContent() {
   const handleSendLink = async () => {
     setLoading(true);
     try {
-      const sendRes = await fetch("/api/send-set-password", {
+      const sendRes = await fetch("/api/request-set-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email }),
@@ -154,8 +154,8 @@ function LoginContent() {
       {showSetPasswordPrompt && (
         <div className="p-3 bg-yellow-100 text-yellow-800 rounded space-y-2">
           <p>
-            We found your account. It was created using Google OAuth and doesn't
-            have a password. Would you like to set one?
+            You originally signed up with Google. Click below to set a password
+            to enable email login.
           </p>
           <button
             type="button"

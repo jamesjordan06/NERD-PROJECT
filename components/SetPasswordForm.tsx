@@ -37,7 +37,7 @@ export default function SetPasswordForm({
 
     try {
       const endpoint = unauth
-        ? "/api/set-password-unauth"
+        ? "/api/set-password-from-token"
         : "/api/set-password";
       const body = unauth ? { token, password } : { password };
       const res = await fetch(endpoint, {
