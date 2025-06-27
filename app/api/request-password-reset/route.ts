@@ -55,7 +55,7 @@ export async function POST(req: Request) {
 
     try {
       await resend.emails.send({
-        from: "Interstellar Nerd <noreply@interstellarnerd.com>",
+        from: "Interstellar Nerd <noreply@interstellarnerd.com>", // TODO: authenticate domain
         to: email,
         subject: "Reset Your Password",
         html: `
@@ -65,6 +65,7 @@ export async function POST(req: Request) {
           <p><a href="${link}">${link}</a></p>
         `,
         text: `Reset your password using this link: ${link}`,
+        trackLinks: false,
       });
     } catch (err) {
       console.error("request-password-reset email error:", err);
