@@ -22,20 +22,32 @@ export default function Navbar() {
   const showSearch = pathname === "/";
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    if (search.trim()) router.push(`/search?q=${encodeURIComponent(search.trim())}`);
+    if (search.trim())
+      router.push(`/search?q=${encodeURIComponent(search.trim())}`);
   };
   const linkClasses = (path: string) =>
-    pathname === path ? "text-neon font-semibold" : "hover:text-primary transition-colors";
+    pathname === path
+      ? "text-neon font-semibold"
+      : "hover:text-primary transition-colors";
 
   return (
     <header className="bg-spacex text-white sticky top-0 z-50 border-b border-white/10">
       <nav className="container mx-auto flex items-center justify-between p-2 min-h-14">
         <Link href="/" className="flex items-center space-x-2">
-          <Image src={LOGO_URL} alt="Interstellar Nerd logo" width={120} height={36} priority />
+          <Image
+            src={LOGO_URL}
+            alt="Interstellar Nerd logo"
+            width={120}
+            height={36}
+            priority
+          />
           <span className="sr-only">Interstellar Nerd</span>
         </Link>
         {showSearch && (
-          <form onSubmit={handleSearch} className="flex-1 flex justify-center mx-4">
+          <form
+            onSubmit={handleSearch}
+            className="flex-1 flex justify-center mx-4"
+          >
             <div className="relative w-full max-w-xs">
               <input
                 type="text"
@@ -55,17 +67,36 @@ export default function Navbar() {
             </div>
           </form>
         )}
-        <button aria-label="Menu" onClick={() => setOpen(!open)} className="sm:hidden ml-2">
+        <button
+          aria-label="Menu"
+          onClick={() => setOpen(!open)}
+          className="sm:hidden ml-2"
+        >
           <Menu />
         </button>
         <ul className="hidden sm:flex items-center space-x-8 font-sans text-base font-medium">
-          <li><Link href="/" className={linkClasses("/")}>Launchpad</Link></li>
-          <li><Link href="/insights" className={linkClasses("/insights")}>Orbital Insights</Link></li>
-          <li><Link href="/forum" className={linkClasses("/forum")}>Mission Control</Link></li>
+          <li>
+            <Link href="/" className={linkClasses("/")}>
+              Launchpad
+            </Link>
+          </li>
+          <li>
+            <Link href="/forum" className={linkClasses("/forum")}>
+              Mission Control
+            </Link>
+          </li>
           {!user && (
             <>
-              <li><Link href="/login" className={linkClasses("/login")}>Crew Login</Link></li>
-              <li><Link href="/signup" className={linkClasses("/signup")}>Join the Crew</Link></li>
+              <li>
+                <Link href="/login" className={linkClasses("/login")}>
+                  Crew Login
+                </Link>
+              </li>
+              <li>
+                <Link href="/signup" className={linkClasses("/signup")}>
+                  Join the Crew
+                </Link>
+              </li>
             </>
           )}
           {user && (
@@ -73,19 +104,30 @@ export default function Navbar() {
               <li>
                 <Link
                   href={user.id ? `/profile/${user.id}` : "/profile/me"}
-                  className={pathname.startsWith("/profile") ? "text-neon font-semibold" : "hover:text-primary"}
+                  className={
+                    pathname.startsWith("/profile")
+                      ? "text-neon font-semibold"
+                      : "hover:text-primary"
+                  }
                 >
                   Crew Profile
                 </Link>
               </li>
               <li>
-                <button onClick={() => signOut({ callbackUrl: "/" })} className="hover:text-primary">
+                <button
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="hover:text-primary"
+                >
                   Sign Out
                 </button>
               </li>
             </>
           )}
-          {status === "loading" && <li><span className="text-spacex-gray">Loading...</span></li>}
+          {status === "loading" && (
+            <li>
+              <span className="text-spacex-gray">Loading...</span>
+            </li>
+          )}
         </ul>
       </nav>
       <motion.ul
@@ -94,13 +136,28 @@ export default function Navbar() {
         transition={{ duration: 0.2 }}
         className={`${open ? "block" : "hidden"} sm:hidden bg-spacex p-4 space-y-2 font-sans text-base font-medium border-t border-white/10`}
       >
-        <li><Link href="/" className={linkClasses("/")}>Launchpad</Link></li>
-        <li><Link href="/insights" className={linkClasses("/insights")}>Orbital Insights</Link></li>
-        <li><Link href="/forum" className={linkClasses("/forum")}>Mission Control</Link></li>
+        <li>
+          <Link href="/" className={linkClasses("/")}>
+            Launchpad
+          </Link>
+        </li>
+        <li>
+          <Link href="/forum" className={linkClasses("/forum")}>
+            Mission Control
+          </Link>
+        </li>
         {!user && (
           <>
-            <li><Link href="/login" className={linkClasses("/login")}>Crew Login</Link></li>
-            <li><Link href="/signup" className={linkClasses("/signup")}>Join the Crew</Link></li>
+            <li>
+              <Link href="/login" className={linkClasses("/login")}>
+                Crew Login
+              </Link>
+            </li>
+            <li>
+              <Link href="/signup" className={linkClasses("/signup")}>
+                Join the Crew
+              </Link>
+            </li>
           </>
         )}
         {user && (
@@ -108,19 +165,30 @@ export default function Navbar() {
             <li>
               <Link
                 href={user.id ? `/profile/${user.id}` : "/profile/me"}
-                className={pathname.startsWith("/profile") ? "text-neon font-semibold" : "hover:text-primary"}
+                className={
+                  pathname.startsWith("/profile")
+                    ? "text-neon font-semibold"
+                    : "hover:text-primary"
+                }
               >
                 Crew Profile
               </Link>
             </li>
             <li>
-              <button onClick={() => signOut({ callbackUrl: "/" })} className="hover:text-primary">
+              <button
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="hover:text-primary"
+              >
                 Sign Out
               </button>
             </li>
           </>
         )}
-        {status === "loading" && <li><span className="text-spacex-gray">Loading...</span></li>}
+        {status === "loading" && (
+          <li>
+            <span className="text-spacex-gray">Loading...</span>
+          </li>
+        )}
       </motion.ul>
     </header>
   );
