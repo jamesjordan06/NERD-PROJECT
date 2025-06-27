@@ -17,7 +17,7 @@ const CATEGORIES = [
   "Black Holes",
   "Galaxies",
   "Solar System",
-  "Space Missions"
+  "Space Missions",
 ];
 
 interface GeneratedContent {
@@ -26,7 +26,7 @@ interface GeneratedContent {
   excerpt: string;
   meta_title: string;
   meta_description: string;
-  tags: string[];
+  tags?: string[];
 }
 
 export default function GenerateContent() {
@@ -36,19 +36,27 @@ export default function GenerateContent() {
   const [category, setCategory] = useState("");
   const [customPrompt, setCustomPrompt] = useState("");
   const [generating, setGenerating] = useState(false);
-  const [generatedContent, setGeneratedContent] = useState<GeneratedContent | null>(null);
+  const [generatedContent, setGeneratedContent] =
+    useState<GeneratedContent | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [generationError, setGenerationError] = useState<string | null>(null);
+  const [highlightCategory, setHighlightCategory] = useState(false);
+
+  // Consider persisting `category` and `customPrompt` across reloads using
+  // localStorage or URL search params.
 
   useEffect(() => {
     if (status === "loading") return;
-    
+
     if (!session) {
       router.push(`/login?callbackUrl=${pathname}`);
       return;
     }
 
-    checkAdminStatus();
+    if (status === "authenticated") {
+      checkAdminStatus();
+    }
   }, [session, status, router]);
 
   const checkAdminStatus = async () => {
@@ -65,10 +73,12 @@ export default function GenerateContent() {
 
   const generateContent = async () => {
     if (!category) {
-      alert("Please select a category");
+      setHighlightCategory(true);
+      setTimeout(() => setHighlightCategory(false), 2000);
       return;
     }
 
+    setGenerationError(null);
     setGenerating(true);
     try {
       const response = await fetch("/api/admin/generate-content", {
@@ -84,14 +94,17 @@ export default function GenerateContent() {
 
       if (response.ok) {
         const data = await response.json();
-        setGeneratedContent(data.post.generatedContent);
+        setGeneratedContent({
+          ...data.post.generatedContent,
+          tags: data.post.generatedContent.tags || [],
+        });
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to generate content");
+        setGenerationError(error.error || "Failed to generate content");
       }
     } catch (error) {
       console.error("Generation error:", error);
-      alert("Failed to generate content");
+      setGenerationError("Failed to generate content");
     } finally {
       setGenerating(false);
     }
@@ -113,7 +126,7 @@ export default function GenerateContent() {
           excerpt: generatedContent.excerpt,
           meta_title: generatedContent.meta_title,
           meta_description: generatedContent.meta_description,
-          tags: generatedContent.tags,
+          tags: generatedContent.tags || [],
           category,
           published: false,
         }),
@@ -181,13 +194,17 @@ export default function GenerateContent() {
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="category-select"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Category *
                 </label>
                 <select
+                  id="category-select"
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+                  className={`w-full px-3 py-2 border ${highlightCategory ? "border-red-500" : "border-gray-300"} rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500`}
                 >
                   <option value="">Select a category</option>
                   {CATEGORIES.map((cat) => (
@@ -199,10 +216,14 @@ export default function GenerateContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="prompt-input"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Custom Prompt (Optional)
                 </label>
                 <textarea
+                  id="prompt-input"
                   value={customPrompt}
                   onChange={(e) => setCustomPrompt(e.target.value)}
                   rows={4}
@@ -228,6 +249,19 @@ export default function GenerateContent() {
                   </>
                 )}
               </button>
+              {generationError && (
+                <div className="mt-4" role="alert">
+                  <div className="bg-red-100 text-red-800 px-4 py-2 rounded-md flex items-center justify-between">
+                    <span>{generationError}</span>
+                    <button
+                      onClick={generateContent}
+                      className="ml-4 underline text-sm"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -257,36 +291,55 @@ export default function GenerateContent() {
               </div>
 
               {showPreview ? (
-                <div className="prose max-w-none">
+                <article className="prose max-w-none">
                   <h1>{generatedContent.title}</h1>
-                  <div dangerouslySetInnerHTML={{ __html: generatedContent.content }} />
-                </div>
+                  {/* TODO: sanitize HTML content here if the API doesn't already */}
+                  <div
+                    dangerouslySetInnerHTML={{
+                      __html: generatedContent.content,
+                    }}
+                  />
+                </article>
               ) : (
                 <div className="space-y-4">
                   <div>
                     <h3 className="text-sm font-medium text-gray-700">Title</h3>
-                    <p className="mt-1 text-sm text-gray-900">{generatedContent.title}</p>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {generatedContent.title}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700">Excerpt</h3>
-                    <p className="mt-1 text-sm text-gray-900">{generatedContent.excerpt}</p>
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Excerpt
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {generatedContent.excerpt}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700">Meta Title</h3>
-                    <p className="mt-1 text-sm text-gray-900">{generatedContent.meta_title}</p>
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Meta Title
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {generatedContent.meta_title}
+                    </p>
                   </div>
-                  
+
                   <div>
-                    <h3 className="text-sm font-medium text-gray-700">Meta Description</h3>
-                    <p className="mt-1 text-sm text-gray-900">{generatedContent.meta_description}</p>
+                    <h3 className="text-sm font-medium text-gray-700">
+                      Meta Description
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-900">
+                      {generatedContent.meta_description}
+                    </p>
                   </div>
-                  
+
                   <div>
                     <h3 className="text-sm font-medium text-gray-700">Tags</h3>
                     <div className="mt-1 flex flex-wrap gap-2">
-                      {generatedContent.tags.map((tag, index) => (
+                      {(generatedContent.tags || []).map((tag, index) => (
                         <span
                           key={index}
                           className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800"
@@ -317,7 +370,7 @@ export default function GenerateContent() {
                     </>
                   )}
                 </button>
-                
+
                 <button
                   onClick={() => router.push("/admin")}
                   className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50"
@@ -331,4 +384,4 @@ export default function GenerateContent() {
       </div>
     </div>
   );
-} 
+}
