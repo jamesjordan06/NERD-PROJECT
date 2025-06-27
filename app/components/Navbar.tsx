@@ -53,6 +53,11 @@ export default function Navbar() {
               Mission Control
             </Link>
           </li>
+          <li>
+            <Link href="/insights" className="hover:text-gray-300 transition">
+              Insights
+            </Link>
+          </li>
           {!user && (
             <>
               <li>
@@ -112,6 +117,11 @@ export default function Navbar() {
         <li>
           <Link href="/forum" className={linkClasses("/forum")}>
             Mission Control
+          </Link>
+        </li>
+        <li>
+          <Link href="/insights" className="hover:text-gray-300 transition">
+            Insights
           </Link>
         </li>
         {!user && (
