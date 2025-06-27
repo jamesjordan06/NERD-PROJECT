@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function SetPasswordForm({ email }: { email: string }) {
+export default function SetPasswordForm({
+  email,
+  unauth = false,
+}: {
+  email: string;
+  unauth?: boolean;
+}) {
   const router = useRouter();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -27,10 +33,13 @@ export default function SetPasswordForm({ email }: { email: string }) {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/set-password", {
+      const endpoint = unauth ? "/api/set-password-unauth" : "/api/set-password";
+      const body = unauth ? { email, password } : { password };
+
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password }),
+        body: JSON.stringify(body),
       });
 
       const data = await res.json();

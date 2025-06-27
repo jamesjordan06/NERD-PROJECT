@@ -18,6 +18,7 @@ export default async function SetPasswordPage({
 
   const { email: queryEmail } = await searchParams;
   const email = session?.user?.email || queryEmail;
+  const unauth = !session?.user?.email;
 
   if (!email) {
     redirect("/login");
@@ -26,7 +27,7 @@ export default async function SetPasswordPage({
   return (
     <div className="max-w-md mx-auto py-12 space-y-6">
       <h1 className="text-3xl font-orbitron text-center">Set Your Password</h1>
-      <SetPasswordForm email={email} />
+      <SetPasswordForm email={email} unauth={unauth} />
     </div>
   );
 }
