@@ -66,15 +66,16 @@ export async function POST(req: Request) {
       to: email,
       subject: "Complete Your Account Setup",
       html: `
-        <div style="font-family: Arial, sans-serif; color: #333;">
-          <h2 style="color:#1a202c;">Welcome to Interstellar Nerd!</h2>
-          <p>You signed up using Google OAuth but didn't set a password.</p>
-          <p>Click the button below to finish setting up your account. This link expires in one hour.</p>
-          <p style="text-align:center; margin: 30px 0;">
-            <a href="${link}" style="display:inline-block;padding:10px 20px;background-color:#4f46e5;color:#ffffff;text-decoration:none;border-radius:5px;">Set My Password</a>
-          </p>
-          <p>If you didn't request this email, you can safely ignore it.</p>
-          <p style="margin-top:30px;">Thanks,<br/>The Interstellar Nerd Team</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+          <h2 style="color: #4F46E5;">Set Your Password for Interstellar Nerd</h2>
+          <p>Hey there!</p>
+          <p>You originally signed up using Google. To enable login with your email and password, you’ll need to set a password.</p>
+          <p>Click the button below to set your password. This link will expire in 1 hour.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Set Password</a>
+          </div>
+          <p>If you didn’t request this, you can safely ignore this email.</p>
+          <p style="color: #888;">— The Interstellar Nerd Team 🚀</p>
         </div>
       `,
     });
