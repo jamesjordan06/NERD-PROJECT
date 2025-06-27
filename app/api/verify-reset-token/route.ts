@@ -13,11 +13,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("password_reset_tokens")
     .select("user_id, expires_at")
     .eq("token", token)
     .maybeSingle();
+
+  if (error) {
+    console.error("verify-reset-token lookup error:", error);
+    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  }
 
   if (!data || new Date(data.expires_at).getTime() < Date.now()) {
     return NextResponse.json({ valid: false });
