@@ -33,7 +33,7 @@ export default async function PostPage({
   params,
 }: {
   params: { slug: string };
-}) {
+}): Promise<JSX.Element> {
   const { slug } = params;
   const post = await fetchPostBySlug(slug);
 
