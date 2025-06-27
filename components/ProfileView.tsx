@@ -279,44 +279,40 @@ export default function ProfileView({
 
           {/* Action Buttons */}
           {canEdit && (
-            <div className="flex space-x-2">
-              {isEditing ? (
-                <>
-                  <button
-                    onClick={onSave}
-                    disabled={saving}
-                    className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition disabled:opacity-50"
-                  >
-                    <Save size={16} />
-                    <span>{saving ? "Saving..." : "Save"}</span>
-                  </button>
-                  <button
-                    onClick={onCancel}
-                    className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition"
-                  >
-                    <X size={16} />
-                    <span>Cancel</span>
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition"
-                  >
-                    <Edit3 size={16} />
-                    <span>Edit Profile</span>
-                  </button>
-                  <button
-                    onClick={() => setIsChangingPassword(true)}
-                    className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition"
-                  >
-                    <Lock size={16} />
-                    <span>Change Password</span>
-                  </button>
-                </>
-              )}
-            </div>
+            isEditing ? (
+              <div className="flex space-x-2 mt-2">
+                <button
+                  onClick={onSave}
+                  disabled={saving}
+                  className="flex items-center space-x-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/80 transition disabled:opacity-50"
+                >
+                  <Save size={16} />
+                  <span>{saving ? "Saving..." : "Save"}</span>
+                </button>
+                <button
+                  onClick={onCancel}
+                  className="flex items-center space-x-2 bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-500 transition"
+                >
+                  <X size={16} />
+                  <span>Cancel</span>
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium"
+                >
+                  Edit Profile
+                </button>
+                <button
+                  onClick={() => setIsChangingPassword(true)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 text-sm font-medium"
+                >
+                  Change Password
+                </button>
+              </div>
+            )
           )}
         </div>
       </div>
