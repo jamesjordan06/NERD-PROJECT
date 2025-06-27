@@ -64,12 +64,18 @@ export async function POST(req: Request) {
     await resend.emails.send({
       from: "Interstellar Nerd <noreply@interstellarnerd.com>",
       to: email,
-      subject: "Set Your Password for Interstellar Nerd",
+      subject: "Complete Your Account Setup",
       html: `
-        <h1>Set Your Password</h1>
-        <p>We received a request to add a password to your account.</p>
-        <p>Click the link below to create one. This link expires in one hour.</p>
-        <p><a href="${link}">Set Password</a></p>
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color:#1a202c;">Welcome to Interstellar Nerd!</h2>
+          <p>You signed up using Google OAuth but didn't set a password.</p>
+          <p>Click the button below to finish setting up your account. This link expires in one hour.</p>
+          <p style="text-align:center; margin: 30px 0;">
+            <a href="${link}" style="display:inline-block;padding:10px 20px;background-color:#4f46e5;color:#ffffff;text-decoration:none;border-radius:5px;">Set My Password</a>
+          </p>
+          <p>If you didn't request this email, you can safely ignore it.</p>
+          <p style="margin-top:30px;">Thanks,<br/>The Interstellar Nerd Team</p>
+        </div>
       `,
     });
   } catch (err) {
