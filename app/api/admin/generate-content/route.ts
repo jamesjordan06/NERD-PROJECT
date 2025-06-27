@@ -207,45 +207,18 @@ export async function POST(request: NextRequest) {
     const keywords = articleData.keywords || [category.toLowerCase()];
     const imageUrls = await generateImages(keywords);
 
-    // Create slug from title
-    const slug = articleData.title
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "")
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-")
-      .trim();
-
-    // Save to database
-    const { data: post, error: dbError } = await supabase
-      .from("posts")
-      .insert({
-        title: articleData.title,
-        slug,
-        content: articleData.content,
-        excerpt: articleData.excerpt,
-        image_urls: imageUrls,
-        author_id: session.user.id,
-        category,
-        meta_title: articleData.meta_title,
-        meta_description: articleData.meta_description,
-        tags: articleData.tags,
-        published: false,
-      })
-      .select()
-      .single();
-
-    if (dbError) {
-      console.error("Database error:", dbError);
-      return NextResponse.json({ error: "Failed to save article" }, { status: 500 });
-    }
+    const generatedContent = {
+      title: articleData.title,
+      content: articleData.content,
+      excerpt: articleData.excerpt,
+      meta_title: articleData.meta_title,
+      meta_description: articleData.meta_description,
+      tags: articleData.tags,
+      imageUrls,
+    };
 
     return NextResponse.json({
-      success: true,
-      post: {
-        ...post,
-        imageUrls,
-        generatedContent: articleData
-      }
+      generatedContent,
     });
 
   } catch (error) {
