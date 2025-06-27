@@ -4,6 +4,34 @@ import { authOptions } from "@/lib/auth-options";
 import { createClient } from "@supabase/supabase-js";
 import OpenAI from "openai";
 
+function stripHtml(html: string): string {
+  return html.replace(/<[^>]*>/g, " ");
+}
+
+function getSentences(text: string): string[] {
+  return text.match(/[^.!?]+[.!?]/g)?.map((s) => s.trim()) || [];
+}
+
+function createExcerpt(content: string): string {
+  const sentences = getSentences(stripHtml(content));
+  if (sentences.length === 0) return content.slice(0, 200) + "...";
+  return sentences.slice(0, 2).join(" ");
+}
+
+function createMetaDescription(content: string): string {
+  const sentences = getSentences(stripHtml(content));
+  if (sentences.length === 0) return content.slice(0, 160) + "...";
+  let description = "";
+  for (const sentence of sentences) {
+    const next = description ? description + " " + sentence : sentence;
+    if (next.length > 157) break;
+    description = next;
+  }
+  return description.length > 160
+    ? description.slice(0, 157).trim() + "..."
+    : description;
+}
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -124,31 +152,33 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate content with OpenAI
-    const prompt = customPrompt || `Write a comprehensive article about ${category.toLowerCase()}. 
-    The article should be 1500-2000 words, SEO-optimized, and include:
-    - An engaging introduction
-    - Multiple H2 headings for structure
-    - Bold text for key terms
-    - A compelling conclusion
-    - Meta title and meta description
-    - 5-7 relevant tags
-    
-    Format the response as JSON with the following structure:
+    const prompt = customPrompt || `Generate a thorough, scientifically accurate HTML article about "${category}".
+    Requirements:
+    - Use clear language with depth and precision.
+    - Structure sections with <h2> tags and write 3-5 paragraphs each.
+    - Highlight key concepts using <strong> tags.
+    - Cite NASA or peer-reviewed sources with links when relevant.
+    - Conclude succinctly.
+    - Provide 5-7 relevant SEO tags.
+    - Return meta_title and meta_description (160 characters max).
+    - Supply a 2-3 sentence excerpt for previews.
+
+    Respond only with JSON in the form:
     {
-      "title": "SEO-optimized title",
-      "content": "Full HTML content with <h1>, <h2>, <p>, <strong> tags",
-      "excerpt": "Brief excerpt for preview",
-      "meta_title": "SEO meta title",
-      "meta_description": "SEO meta description",
-      "tags": ["tag1", "tag2", "tag3"]
+      "title": "...",
+      "content": "...",
+      "excerpt": "...",
+      "meta_title": "...",
+      "meta_description": "...",
+      "tags": ["...", "..."]
     }`;
 
     const completion = await openai.chat.completions.create({
-      model: "gpt-4",
+      model: "gpt-4-0125-preview",
       messages: [
         {
           role: "system",
-          content: "You are an expert science writer specializing in space and astronomy."
+          content: "You are a space journalist writing for a science magazine. Include links to credible sources when possible. Format your answer as JSON only."
         },
         {
           role: "user",
@@ -171,9 +201,9 @@ export async function POST(request: NextRequest) {
       articleData = {
         title: `Latest in ${category}`,
         content: content,
-        excerpt: content.substring(0, 200) + "...",
+        excerpt: createExcerpt(content),
         meta_title: `Latest in ${category}`,
-        meta_description: content.substring(0, 160) + "...",
+        meta_description: createMetaDescription(content),
         tags: [category.toLowerCase().replace(" ", "-")]
       };
     }
