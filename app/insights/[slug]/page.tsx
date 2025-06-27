@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 
 
 export default async function PostPage({ params }: { params: { slug: string } }) {
-  const post = await fetchPostBySlug(params.slug);
+  const { slug } = params;
+  const post = await fetchPostBySlug(slug);
 
   if (!post) {
     notFound();
