@@ -1,12 +1,18 @@
 import { fetchPosts } from "../../lib/posts";
 import PostList from "../../components/PostList";
 import { Search } from "lucide-react";
+import type { PageProps } from "next";
 
-interface SearchPageProps {
-  searchParams: { q?: string };
+// Export an empty `generateStaticParams` so Next.js does not treat the
+// `searchParams` prop as a Promise. This keeps the `PageProps` helper type
+// usable without build errors.
+export async function generateStaticParams(): Promise<Record<string, never>[]> {
+  return [];
 }
 
-export default async function SearchPage({ searchParams }: SearchPageProps) {
+export default async function SearchPage({
+  searchParams,
+}: PageProps<{}, { q?: string }>) {
   const { q: queryParam } = searchParams;
   const query = queryParam || "";
   const allPosts = (await fetchPosts(0, 100)) ?? [];
