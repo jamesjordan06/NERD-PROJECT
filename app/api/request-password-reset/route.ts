@@ -38,12 +38,14 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+
     const { error: insertErr } = await supabase
       .from("password_reset_tokens")
       .insert({
         user_id: user.id,
         token,
-        created_at: new Date().toISOString(),
+        expires_at: expiresAt,
       });
 
     if (insertErr) {
@@ -57,8 +59,11 @@ export async function POST(req: Request) {
       from: "Interstellar Nerd <noreply@interstellarnerd.com>",
       to: email,
       subject: "Reset Your Password",
-      html: `<p>Click <a href="${link}">here</a> to reset your password.</p>`,
-      text: `Reset your password using this link: ${link}`,
+      html: `
+        <p>Click <a href="${link}">here</a> to reset your password.</p>
+        <p>This link will expire in 15 minutes.</p>
+      `,
+      text: `Reset your password using this link: ${link}\n\nThis link will expire in 15 minutes.`,
     });
 
     return NextResponse.json({ success: true });
