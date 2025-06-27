@@ -7,10 +7,10 @@ const supabase = createClient(
 );
 
 export async function POST(req: Request) {
-  const { token } = await req.json().catch(() => ({}));
+  const { token } = await req.json();
 
-  if (!token || typeof token !== "string") {
-    return NextResponse.json({ error: "Missing token" }, { status: 400 });
+  if (!token) {
+    return NextResponse.json({ valid: false }, { status: 400 });
   }
 
   const { data, error } = await supabase
@@ -19,13 +19,16 @@ export async function POST(req: Request) {
     .eq("token", token)
     .maybeSingle();
 
-  if (error) {
-    console.error("verify-reset-token lookup error:", error);
-    return NextResponse.json({ error: "Database error" }, { status: 500 });
+  if (error || !data) {
+    console.error("Token not found or DB error:", error);
+    return NextResponse.json({ valid: false }, { status: 401 });
   }
 
-  if (!data || new Date(data.expires_at).getTime() < Date.now()) {
-    return NextResponse.json({ valid: false });
+  const now = new Date();
+  const expiresAt = new Date(data.expires_at);
+
+  if (expiresAt < now) {
+    return NextResponse.json({ valid: false }, { status: 401 });
   }
 
   return NextResponse.json({ valid: true, user_id: data.user_id });
