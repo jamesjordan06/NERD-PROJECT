@@ -1,12 +1,10 @@
 import PostCard from "../../../../components/PostCard";
 import { fetchPosts } from "../../../../lib/posts";
 import { notFound } from "next/navigation";
-import type { RouteProps } from "@/types/route-props";
 
 // Explicitly export an empty `generateStaticParams` to signal that this
 // route is fully dynamic. This keeps Next.js from typing the `params`
-// argument as a Promise and allows us to use the `RouteProps` helper type
-// without build errors.
+// argument as a Promise.
 
 export async function generateStaticParams(): Promise<{ page: string }[]> {
   return [];
@@ -16,7 +14,9 @@ export const revalidate = 60;
 
 export default async function InsightsPage({
   params,
-}: RouteProps<{ page: string }>) {
+}: {
+  params: { page: string };
+}) {
   const pageNum = Number(params.page);
   if (!Number.isInteger(pageNum) || pageNum < 1) {
     notFound();

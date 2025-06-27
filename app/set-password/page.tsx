@@ -5,7 +5,6 @@ import { authOptions } from "../../lib/auth-options";
 import SetPasswordForm from "../../components/SetPasswordForm";
 import InvalidTokenNotice from "../../components/InvalidTokenNotice";
 import { createClient } from "@supabase/supabase-js";
-import type { RouteProps } from "@/types/route-props";
 
 export async function generateStaticParams(): Promise<Record<string, never>[]> {
   return [];
@@ -13,7 +12,9 @@ export async function generateStaticParams(): Promise<Record<string, never>[]> {
 
 export default async function SetPasswordPage({
   searchParams,
-}: RouteProps<{}, { token?: string }>) {
+}: {
+  searchParams: { token?: string };
+}) {
   const session = await getServerSession({
     ...authOptions,
     secret: process.env.NEXTAUTH_SECRET,
