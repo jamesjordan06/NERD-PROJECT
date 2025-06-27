@@ -44,7 +44,7 @@ export async function POST(req: Request) {
 
   try {
     const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+    const expires = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
 
     await supabase
       .from("verification_tokens")
@@ -70,7 +70,7 @@ export async function POST(req: Request) {
           <h2 style="color: #4F46E5;">Set Your Password for Interstellar Nerd</h2>
           <p>Hey there!</p>
           <p>You originally signed up using Google. To enable login with your email and password, you’ll need to set a password.</p>
-          <p>Click the button below to set your password. This link will expire in 1 hour.</p>
+          <p>Click the button below to set your password. This link will expire in 15 minutes.</p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${link}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Set Password</a>
           </div>
