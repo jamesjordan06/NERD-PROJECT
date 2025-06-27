@@ -65,7 +65,6 @@ export async function POST(req: Request) {
           <p><a href="${link}">${link}</a></p>
         `,
         text: `Reset your password using this link: ${link}`,
-        trackLinks: false,
       });
     } catch (err) {
       console.error("request-password-reset email error:", err);
