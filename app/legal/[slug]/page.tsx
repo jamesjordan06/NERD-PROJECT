@@ -1,9 +1,9 @@
 // app/legal/[slug]/page.tsx
 import { fetchLegalPage, fetchLegalPageSlugs } from '../../../lib/posts';
-import { Metadata } from 'next';
+import { Metadata, type PageProps } from 'next';
 
 // 1) Generate all slugs at build time (fetching the string array)
-export async function generateStaticParams() {
+export async function generateStaticParams(): Promise<{ slug: string }[]> {
   try {
     const slugs = await fetchLegalPageSlugs();
     return slugs.map((slug) => ({ slug }));
@@ -14,7 +14,7 @@ export async function generateStaticParams() {
 }
 
 // 2) Per-page metadata
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+export async function generateMetadata({ params }: PageProps<{ slug: string }>): Promise<Metadata> {
   const { slug } = params;
   const page = await fetchLegalPage(slug);
   return {
@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 // 3) Page component
-export default async function LegalPage({ params }: { params: { slug: string } }) {
+export default async function LegalPage({ params }: PageProps<{ slug: string }>): Promise<JSX.Element> {
   const { slug } = params;
   const page = await fetchLegalPage(slug);
 
