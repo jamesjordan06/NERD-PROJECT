@@ -14,8 +14,8 @@ export async function generateStaticParams() {
 }
 
 // 2) Per-page metadata
-export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const { slug } = await params;
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const { slug } = params;
   const page = await fetchLegalPage(slug);
   return {
     title: page?.title ?? 'Legal Document',
@@ -24,8 +24,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 // 3) Page component
-export default async function LegalPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
+export default async function LegalPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const page = await fetchLegalPage(slug);
 
   if (!page) {
