@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import crypto from "crypto";
+import { randomBytes } from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -32,20 +32,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    if (!token) {
-      console.error("Failed to generate password reset token");
-      return NextResponse.json({ error: "Server error" }, { status: 500 });
-    }
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
 
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+    // remove existing tokens for this user to avoid clutter
+    await supabase.from("password_reset_tokens").delete().eq("user_id", user.id);
 
     const { error: insertErr } = await supabase
       .from("password_reset_tokens")
       .insert({
         user_id: user.id,
         token,
-        expires_at: expiresAt,
+        expires_at: expiresAt.toISOString(),
       });
 
     if (insertErr) {
