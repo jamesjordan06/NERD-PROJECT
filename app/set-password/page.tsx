@@ -1,6 +1,5 @@
-"use client";
-import ClientForm from "./ClientForm";
+import ClientWrapper from "./ClientWrapper";
 
 export default function SetPasswordPage() {
-  return <ClientForm />;
+  return <ClientWrapper />;
 }
