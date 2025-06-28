@@ -43,7 +43,7 @@ export default function ProfileView({
   isOwnProfile: boolean;
   user: any;
 }) {
-  const { data: session } = useSession();
+  const { data: session, update } = useSession();
   const supabase = useMemo(() => createClientComponentClient(), []);
 
   const [isEditing, setIsEditing] = useState(false);
@@ -143,27 +143,33 @@ export default function ProfileView({
     setSuccess(null);
 
     try {
-      const { error: updErr } = await supabase
+      if (username.trim() !== (profile.username || "")) {
+        const res = await fetch("/api/change-username", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ newUsername: username.trim() }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to update username");
+        await update();
+      }
+
+      const { error: bioErr } = await supabase
         .from("profiles")
         .update({
-          username: username.trim() || null,
           bio: bio.trim() || null,
         })
         .eq("user_id", session?.user?.id);
 
-      if (updErr) {
-        throw updErr;
+      if (bioErr) {
+        throw bioErr;
       }
 
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
     } catch (err: any) {
-      setError(
-        err.code === "23505"
-          ? "Username already taken."
-          : err.message || "Failed to update profile"
-      );
+      setError(err.message || "Failed to update profile");
     } finally {
       setSaving(false);
     }

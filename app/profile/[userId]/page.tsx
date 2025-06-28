@@ -1,130 +1,80 @@
-"use client";
-
-import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { getSession } from "next-auth/react";
+import { redirect } from "next/navigation";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../../lib/auth-options";
 import ProfileView from "../../../components/ProfileView";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { createClient } from "@supabase/supabase-js";
 
-export default function ProfilePageClient() {
-  const { userId } = useParams();
-  const router = useRouter();
-  const supabase = useMemo(() => createClientComponentClient(), []);
+export default async function ProfilePage({ params }: { params: { userId: string } }) {
+  const session = await getServerSession({
+    ...authOptions,
+    secret: process.env.NEXTAUTH_SECRET,
+  });
 
-  const [profile, setProfile] = useState<any>(null);
-  const [stats, setStats] = useState({ threads: 0, replies: 0 });
-  const [loading, setLoading] = useState(true);
-  const [sessionUserId, setSessionUserId] = useState<string | null>(null);
-  const [session, setSession] = useState<any>(null);
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
-  useEffect(() => {
-    if (!userId) return;
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
 
-    (async () => {
-      setLoading(true);
+  const currentUserId = session.user.id;
+  const targetId = params.userId === "me" ? currentUserId : params.userId;
 
-      // 1) Get NextAuth session
-      const session = await getSession();
-      if (!session || !session.user?.id) {
-        router.replace("/login");
-        return;
-      }
+  let { data: profile, error: profErr } = await supabase
+    .from("profiles")
+    .select("id, user_id, username, avatar_url, bio")
+    .eq("user_id", targetId)
+    .maybeSingle();
 
-      setSession(session);
-      const currentUserId = session.user.id;
-      setSessionUserId(currentUserId);
+  if (!profile && targetId === currentUserId) {
+    const { data: newProf, error: insertErr } = await supabase
+      .from("profiles")
+      .insert({
+        user_id: targetId,
+        username: "user_" + Math.random().toString(36).substring(2, 10),
+        bio: "",
+        avatar_url: "",
+      })
+      .select()
+      .single();
 
-      // 2) Resolve "me" → real ID
-      const targetId = userId === "me" ? currentUserId : userId;
-
-      // 3) Try to get profile by user_id
-      let { data: prof, error: profErr } = await supabase
-        .from("profiles")
-        .select("id, user_id, username, avatar_url, bio")
-        .eq("user_id", targetId)
-        .maybeSingle();
-      if (profErr) {
-        console.error('Profile fetch error', profErr);
-      }
-
-      if (!prof && targetId === currentUserId) {
-        
-        const { data: newProf, error: insertErr } = await supabase
+    if (insertErr) {
+      if (insertErr.code === "23505") {
+        const { data: existingProf } = await supabase
           .from("profiles")
-          .insert({
-            user_id: targetId,
-            username: "user_" + Math.random().toString(36).substring(2, 10),
-            bio: "",
-            avatar_url: "",
-          })
-          .select()
+          .select("id, user_id, username, avatar_url, bio")
+          .eq("user_id", targetId)
           .single();
-          
-        if (insertErr) {
-          console.error('Profile create error details:', {
-            message: insertErr.message,
-            code: insertErr.code,
-            details: insertErr.details,
-            hint: insertErr.hint
-          });
-          
-          // If it's a unique constraint violation, try to fetch the existing profile
-          if (insertErr.code === '23505') {
-            const { data: existingProf, error: fetchErr } = await supabase
-              .from("profiles")
-              .select("id, user_id, username, avatar_url, bio")
-              .eq("user_id", targetId)
-              .single();
-              
-            if (fetchErr) {
-              console.error('Error fetching existing profile:', fetchErr);
-            } else {
-              prof = existingProf;
-            }
-          }
-        } else {
-          prof = newProf;
-        }
+        profile = existingProf ?? null;
       }
+    } else {
+      profile = newProf;
+    }
+  }
 
-      if (!prof || profErr) {
-        setProfile(null);
-        setLoading(false);
-        return;
-      }
+  if (!profile || profErr) {
+    return <p className="p-6 text-center">Profile not found.</p>;
+  }
 
-      setProfile(prof);
-
-      // 4) Fetch stats
-      const [{ count: threadCount }, { count: replyCount }] = await Promise.all([
-        supabase
-          .from("threads")
-          .select("id", { head: true, count: "exact" })
-          .eq("user_id", targetId),
-        supabase
-          .from("replies")
-          .select("id", { head: true, count: "exact" })
-          .eq("user_id", targetId),
-      ]);
-
-      setStats({
-        threads: threadCount ?? 0,
-        replies: replyCount ?? 0,
-      });
-
-      setLoading(false);
-    })();
-  }, [userId, router, supabase]);
-
-  if (loading) return <p className="p-6 text-center">Loading…</p>;
-  if (!profile) return <p className="p-6 text-center">Profile not found.</p>;
+  const [{ count: threadCount }, { count: replyCount }] = await Promise.all([
+    supabase
+      .from("threads")
+      .select("id", { head: true, count: "exact" })
+      .eq("user_id", targetId),
+    supabase
+      .from("replies")
+      .select("id", { head: true, count: "exact" })
+      .eq("user_id", targetId),
+  ]);
 
   return (
     <ProfileView
       profile={profile}
-      stats={stats}
-      isOwnProfile={profile.user_id === sessionUserId}
-      user={session?.user}
+      stats={{ threads: threadCount ?? 0, replies: replyCount ?? 0 }}
+      isOwnProfile={profile.user_id === currentUserId}
+      user={session.user}
     />
   );
 }
