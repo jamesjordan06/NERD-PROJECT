@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import { toast } from "react-hot-toast";
 import { FcGoogle } from "react-icons/fc";
 import PasswordInput from "@/components/PasswordInput";
 
@@ -23,9 +24,11 @@ export default function SignupPage() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setLoading(true);
 
     if (password !== confirmPassword) {
       setError("Passwords do not match");
+      setLoading(false);
       return;
     }
 
@@ -42,6 +45,7 @@ export default function SignupPage() {
     if (!res.ok) {
       const { error } = await res.json();
       setError(error ?? "Signup failed");
+      setLoading(false);
       return;
     }
 
@@ -53,10 +57,12 @@ export default function SignupPage() {
     });
 
     if (result?.ok) {
-      router.push("/profile");
+      toast.success("Welcome aboard!");
+      router.push("/");
     } else {
       setError("Login failed after signup");
     }
+    setLoading(false);
   };
 
   return (
