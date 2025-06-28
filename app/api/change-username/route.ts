@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Offensive term not allowed" }, { status: 400 });
     }
 
+    // Check if the desired username is already taken in profiles table
     const { data: existing, error: fetchErr } = await supabase
       .from("profiles")
       .select("id")
@@ -44,23 +45,48 @@ export async function POST(req: NextRequest) {
       .neq("user_id", token.sub as string)
       .maybeSingle();
 
-    if (fetchErr) {
-      console.error("Check username error", fetchErr);
+    // Also ensure no other auth user already has this username
+    const { data: existingUser, error: userFetchErr } = await supabase
+      .from("users")
+      .select("id")
+      .eq("username", username)
+      .neq("id", token.sub as string)
+      .maybeSingle();
+
+    if (fetchErr || userFetchErr) {
+      console.error("Check username error", fetchErr || userFetchErr);
       return NextResponse.json({ error: "Server error" }, { status: 500 });
     }
 
-    if (existing) {
+    if (existing || existingUser) {
       return NextResponse.json({ error: "Username taken" }, { status: 409 });
     }
 
-    const { error: updateErr } = await supabase
+    // Update username in profiles table
+    const { error: profileErr } = await supabase
       .from("profiles")
       .update({ username })
       .eq("user_id", token.sub as string);
 
-    if (updateErr) {
-      console.error("Update username error", updateErr);
-      return NextResponse.json({ error: "Failed to update username" }, { status: 500 });
+    if (profileErr) {
+      console.error("Update username error", profileErr);
+      return NextResponse.json(
+        { error: "Failed to update username" },
+        { status: 500 }
+      );
+    }
+
+    // Also update username in users table to keep both tables in sync
+    const { error: userErr } = await supabase
+      .from("users")
+      .update({ username })
+      .eq("id", token.sub as string);
+    if (userErr) {
+      console.error("Update auth user username error", userErr);
+      return NextResponse.json(
+        { error: "Failed to update username" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true, username });
