@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     .eq("token", token)
     .maybeSingle();
 
-  console.log("📦 Query result:", { data, error });
+  console.log("📦 Lookup result:", { data, error });
 
   if (error || !data) {
     return NextResponse.json({ valid: false, reason: "not_found" }, { status: 401 });

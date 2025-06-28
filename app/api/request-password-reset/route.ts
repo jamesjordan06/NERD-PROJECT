@@ -24,19 +24,18 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (userError || !user) {
+    console.log("User lookup failed or not found for", email, userError);
     return NextResponse.json({ success: true }); // Don't reveal if user exists
   }
 
   const token = randomBytes(32).toString("hex");
-  const expiresAt = new Date(Date.now() + 1000 * 60 * 30).toISOString(); // 30 min
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 30); // 30 minutes
 
-  const { error: insertError } = await supabase.from("password_reset_tokens").insert([
-    {
-      token,
-      user_id: user.id,
-      expires_at: expiresAt,
-    },
-  ]);
+  console.log("🔑 Creating reset token", { token, user: user.id, expiresAt });
+
+  const { error: insertError } = await supabase
+    .from("password_reset_tokens")
+    .insert([{ token, user_id: user.id, expires_at: expiresAt }]);
 
   if (insertError) {
     console.error("❌ Error inserting token:", insertError.message);
@@ -49,8 +48,10 @@ export async function POST(req: Request) {
     from: "Interstellar Nerd <noreply@interstellarnerd.com>",
     to: email,
     subject: "Reset Your Password",
-    html: `<p>Click the link below to reset your password:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+    html: `<p>Reset your password by clicking below. This link is valid for 30 minutes:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
   });
+
+  console.log("✉️ Sent reset email to", email, "with", resetUrl);
 
   return NextResponse.json({ success: true });
 }
