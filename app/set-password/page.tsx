@@ -1,76 +1,115 @@
-// app/set-password/page.tsx
+"use client";
 
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../lib/auth-options";
-import SetPasswordForm from "../../components/SetPasswordForm";
-import InvalidTokenNotice from "../../components/InvalidTokenNotice";
-import { createClient } from "@supabase/supabase-js";
+import { useEffect, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import PasswordInput from "@/components/PasswordInput";
+import { toast } from "react-hot-toast";
 
-export default async function SetPasswordPage(req: any) {
-  const token = req?.searchParams?.token;
+export default function SetPasswordPage() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const token = searchParams.get("token");
 
-  const session = await getServerSession({
-    ...authOptions,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const [loading, setLoading] = useState(true);
+  const [valid, setValid] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
-  if (session?.user?.email) {
-    return (
-      <div className="max-w-md mx-auto py-12 space-y-6">
-        <h1 className="text-3xl font-orbitron text-center">Set Your Password</h1>
-        <SetPasswordForm email={session.user.email} />
-      </div>
-    );
-  }
-
-  if (!token) {
-    redirect("/login");
-  }
-
-  const verifyRes = await fetch(
-    `${process.env.NEXT_PUBLIC_SITE_URL}/api/verify-reset-token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token }),
-      cache: "no-store",
+  useEffect(() => {
+    if (!token) {
+      setLoading(false);
+      setError("Missing reset token.");
+      return;
     }
-  );
+    const verify = async () => {
+      try {
+        const res = await fetch("/api/verify-reset-token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+        const data = await res.json();
+        console.log("verify-reset-token response:", data, "token:", token);
+        if (data.valid) {
+          setValid(true);
+        } else {
+          setError("This link is invalid or has expired.");
+        }
+      } catch (err) {
+        console.error("verify-reset-token error:", err, "token:", token);
+        setError("This link is invalid or has expired.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    verify();
+  }, [token]);
 
-  const verifyData = await verifyRes.json();
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (password !== confirm) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters long.");
+      return;
+    }
+    try {
+      const res = await fetch("/api/set-password-from-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to set password");
+      toast.success("Password successfully set!");
+      router.push("/login");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to set password");
+    }
+  };
 
-  if (!verifyRes.ok || !verifyData.valid) {
+  if (loading) {
+    return <p className="text-center mt-10">Validating reset link...</p>;
+  }
+
+  if (error) {
     return (
       <div className="max-w-md mx-auto py-12">
-        <InvalidTokenNotice />
+        <p className="text-red-600">{error}</p>
       </div>
     );
   }
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  const { data: user } = await supabase
-    .from("users")
-    .select("email, hashed_password")
-    .eq("id", verifyData.user_id)
-    .maybeSingle();
-
-  if (!user || user.hashed_password) {
-    return (
-      <div className="max-w-md mx-auto py-12">
-        <InvalidTokenNotice />
-      </div>
-    );
-  }
+  if (!valid) return null;
 
   return (
     <div className="max-w-md mx-auto py-12 space-y-6">
-      <h1 className="text-3xl font-orbitron text-center">Set Your Password</h1>
-      <SetPasswordForm email={user.email} unauth token={token!} />
+      <h1 className="text-3xl font-orbitron text-center">Set New Password</h1>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <PasswordInput
+          placeholder="New password"
+          className="p-2 w-full rounded text-black"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <PasswordInput
+          placeholder="Confirm password"
+          className="p-2 w-full rounded text-black"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+          required
+        />
+        <button
+          type="submit"
+          className="bg-blue-600 text-white w-full p-2 rounded"
+        >
+          Reset Password
+        </button>
+      </form>
     </div>
   );
 }
