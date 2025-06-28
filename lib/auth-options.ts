@@ -296,6 +296,27 @@ export const authOptions: NextAuthOptions = {
     },
     async signIn({ user, account }) {
 
+      // Only credentials logins should trigger a password check.
+      if (account?.provider === "credentials") {
+        const { adminSupabase } = createSupabaseClients();
+        const { data: record, error } = await adminSupabase
+          .from("users")
+          .select("hashed_password")
+          .eq("id", user.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching user during signIn:", error);
+          return false;
+        }
+
+        // If the user signed up via OAuth previously and has no password set,
+        // redirect them to the set password flow.
+        if (!record?.hashed_password) {
+          return "/set-password";
+        }
+      }
+
       if (account?.provider === "google") {
 
         const { data: existingUser, error } = await adminSupabase
