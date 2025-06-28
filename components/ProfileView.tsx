@@ -4,7 +4,20 @@
 import { useState, useEffect, useMemo, ChangeEvent } from "react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useSession } from "next-auth/react";
-import { Edit3, Save, X, User, Calendar, MessageSquare, FileText, Globe, Mail, Lock, Upload, Camera } from "lucide-react";
+import {
+  Edit3,
+  Save,
+  X,
+  User,
+  Calendar,
+  MessageSquare,
+  FileText,
+  Globe,
+  Mail,
+  Lock,
+  Upload,
+  Camera,
+} from "lucide-react";
 import PasswordInput from "@/components/PasswordInput";
 
 interface Profile {
@@ -32,7 +45,7 @@ export default function ProfileView({
 }) {
   const { data: session } = useSession();
   const supabase = useMemo(() => createClientComponentClient(), []);
-  
+
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [username, setUsername] = useState(profile.username || "");
@@ -42,7 +55,7 @@ export default function ProfileView({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  
+
   // Password change states
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -63,18 +76,19 @@ export default function ProfileView({
     if (!e.target.files?.[0] || !canEdit) return;
     setUploading(true);
     setError(null);
-    
+
     const file = e.target.files[0];
-    
+
     // Validate file type and size
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file.');
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file.");
       setUploading(false);
       return;
     }
-    
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
-      setError('Image must be smaller than 5MB.');
+
+    if (file.size > 5 * 1024 * 1024) {
+      // 5MB limit
+      setError("Image must be smaller than 5MB.");
       setUploading(false);
       return;
     }
@@ -86,10 +100,10 @@ export default function ProfileView({
 
       // Upload to Supabase storage
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
+        .from("avatars")
         .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: true
+          cacheControl: "3600",
+          upsert: true,
         });
 
       if (uploadError) {
@@ -97,9 +111,9 @@ export default function ProfileView({
       }
 
       // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(filePath);
 
       // Update profile with new avatar URL
       const { error: updateError } = await supabase
@@ -114,9 +128,8 @@ export default function ProfileView({
       setAvatarUrl(publicUrl);
       setSuccess("Avatar updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
-      
     } catch (err: any) {
-      setError(err.message || 'Failed to upload avatar');
+      setError(err.message || "Failed to upload avatar");
     } finally {
       setUploading(false);
     }
@@ -132,9 +145,9 @@ export default function ProfileView({
     try {
       const { error: updErr } = await supabase
         .from("profiles")
-        .update({ 
-          username: username.trim() || null, 
-          bio: bio.trim() || null 
+        .update({
+          username: username.trim() || null,
+          bio: bio.trim() || null,
         })
         .eq("user_id", session?.user?.id);
 
@@ -145,7 +158,6 @@ export default function ProfileView({
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 3000);
-      
     } catch (err: any) {
       setError(
         err.code === "23505"
@@ -175,10 +187,10 @@ export default function ProfileView({
 
     try {
       // Call API to change password
-      const response = await fetch('/api/change-password', {
-        method: 'POST',
+      const response = await fetch("/api/change-password", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           currentPassword,
@@ -189,7 +201,7 @@ export default function ProfileView({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to change password');
+        throw new Error(data.error || "Failed to change password");
       }
 
       setSuccess("Password changed successfully!");
@@ -198,7 +210,6 @@ export default function ProfileView({
       setNewPassword("");
       setConfirmPassword("");
       setTimeout(() => setSuccess(null), 3000);
-      
     } catch (err: any) {
       setError(err.message || "Failed to change password");
     } finally {
@@ -225,14 +236,14 @@ export default function ProfileView({
     <div className="max-w-4xl mx-auto py-8 px-4">
       {/* Header */}
       <div className="bg-spacex border border-white/10 rounded-lg p-6 mb-6">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between space-y-4 sm:space-y-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start sm:space-x-6 space-y-4 sm:space-y-0">
             {/* Avatar */}
             <div className="relative group">
               <img
                 src={avatarUrl || user?.image || "/default-avatar.png"}
                 alt="Avatar"
-                className="w-24 h-24 rounded-full object-cover border-2 border-primary"
+                className="w-20 h-20 sm:w-24 sm:h-24 mx-auto sm:mx-0 rounded-full object-cover border-2 border-primary"
               />
               {canEdit && (
                 <label className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
@@ -252,13 +263,13 @@ export default function ProfileView({
                 </div>
               )}
             </div>
-            
+
             {/* User Info */}
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">
+            <div className="text-center sm:text-left">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
                 {profile.username || "Anonymous User"}
               </h1>
-              <div className="flex items-center space-x-4 text-spacex-gray">
+              <div className="flex flex-col sm:flex-row sm:items-center text-spacex-gray space-y-2 sm:space-y-0 sm:space-x-4">
                 <div className="flex items-center space-x-1">
                   <User size={16} />
                   <span>Member</span>
@@ -278,9 +289,9 @@ export default function ProfileView({
           </div>
 
           {/* Action Buttons */}
-          {canEdit && (
-            isEditing ? (
-              <div className="flex space-x-2 mt-2">
+          {canEdit &&
+            (isEditing ? (
+              <div className="flex space-x-2 mt-4 sm:mt-0 self-center sm:self-start">
                 <button
                   onClick={onSave}
                   disabled={saving}
@@ -298,7 +309,7 @@ export default function ProfileView({
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 sm:mt-0 self-center sm:self-start">
                 <button
                   onClick={() => setIsEditing(true)}
                   className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 text-sm font-medium"
@@ -312,8 +323,7 @@ export default function ProfileView({
                   Change Password
                 </button>
               </div>
-            )
-          )}
+            ))}
         </div>
       </div>
 
@@ -333,7 +343,9 @@ export default function ProfileView({
       {isChangingPassword && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-spacex border border-white/10 rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-bold text-white mb-4">Change Password</h2>
+            <h2 className="text-xl font-bold text-white mb-4">
+              Change Password
+            </h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-spacex-gray mb-2">
@@ -394,7 +406,7 @@ export default function ProfileView({
               <User size={20} />
               <span>About Me</span>
             </h2>
-            
+
             {isEditing ? (
               <div className="space-y-4">
                 <div>
@@ -426,7 +438,9 @@ export default function ProfileView({
               <div className="space-y-4">
                 <div>
                   <span className="text-sm text-spacex-gray">Username</span>
-                  <p className="text-white font-medium">{profile.username || "Not set"}</p>
+                  <p className="text-white font-medium">
+                    {profile.username || "Not set"}
+                  </p>
                 </div>
                 <div>
                   <span className="text-sm text-spacex-gray">Bio</span>
@@ -440,7 +454,9 @@ export default function ProfileView({
 
           {/* Recent Activity */}
           <div className="bg-spacex border border-white/10 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-4">Recent Activity</h2>
+            <h2 className="text-xl font-bold text-white mb-4">
+              Recent Activity
+            </h2>
             <div className="text-spacex-gray">
               <p>No recent activity to show.</p>
             </div>
@@ -458,14 +474,18 @@ export default function ProfileView({
                   <FileText size={20} className="text-primary" />
                   <span className="text-white">Threads</span>
                 </div>
-                <span className="text-2xl font-bold text-primary">{stats.threads}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {stats.threads}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3 bg-background rounded-lg">
                 <div className="flex items-center space-x-3">
                   <MessageSquare size={20} className="text-primary" />
                   <span className="text-white">Replies</span>
                 </div>
-                <span className="text-2xl font-bold text-primary">{stats.replies}</span>
+                <span className="text-2xl font-bold text-primary">
+                  {stats.replies}
+                </span>
               </div>
             </div>
           </div>
@@ -473,7 +493,9 @@ export default function ProfileView({
           {/* Quick Actions */}
           {canEdit && (
             <div className="bg-spacex border border-white/10 rounded-lg p-6">
-              <h2 className="text-xl font-bold text-white mb-4">Quick Actions</h2>
+              <h2 className="text-xl font-bold text-white mb-4">
+                Quick Actions
+              </h2>
               <div className="space-y-3">
                 <button className="w-full bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/80 transition">
                   Create New Thread
