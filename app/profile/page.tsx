@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../lib/auth-options";
 import { createClient } from "@supabase/supabase-js";
 import ProfileView from "../../components/ProfileView";
+import ChangeUsernameForm from "../../components/ChangeUsernameForm";
 import crypto from "crypto";
 
 export default async function ProfilePage() {
@@ -67,11 +68,14 @@ export default async function ProfilePage() {
   ]);
 
   return (
-    <ProfileView
-      profile={profile}
-      stats={{ threads: threadCount ?? 0, replies: replyCount ?? 0 }}
-      isOwnProfile={true}
-      user={session.user}
-    />
+    <>
+      <ProfileView
+        profile={profile}
+        stats={{ threads: threadCount ?? 0, replies: replyCount ?? 0 }}
+        isOwnProfile={true}
+        user={session.user}
+      />
+      <ChangeUsernameForm current={profile.username} />
+    </>
   );
 }
