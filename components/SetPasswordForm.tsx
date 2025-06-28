@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import PasswordInput from "@/components/PasswordInput";
 
 export default function SetPasswordForm({
@@ -37,9 +37,7 @@ export default function SetPasswordForm({
     setLoading(true);
 
     try {
-      const endpoint = unauth
-        ? "/api/set-password-from-token"
-        : "/api/set-password";
+      const endpoint = "/api/set-password";
       const body = unauth ? { token, password } : { password };
       const res = await fetch(endpoint, {
         method: "POST",
@@ -49,12 +47,12 @@ export default function SetPasswordForm({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to set password");
       if (unauth) {
-        await signIn("credentials", { redirect: false, email, password });
+        // Session cookies set by the API route
       } else {
         await update();
       }
       toast.success("Password successfully set!");
-      router.push("/");
+      router.push("/profile");
     } catch (err: any) {
       toast.error(err.message || "Failed to set password");
     } finally {
