@@ -10,13 +10,11 @@ const supabase = createClient(
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
 const OFFENSIVE = [
   "admin",
-  "mod",
+  "moderator",
+  "staff",
   "fuck",
   "shit",
   "bitch",
-  "nigger",
-  "slut",
-  "cunt",
 ];
 
 export async function POST(req: NextRequest) {
@@ -59,30 +57,61 @@ export async function POST(req: NextRequest) {
     }
 
     if (existing || existingUser) {
-      return NextResponse.json({ error: "Username taken" }, { status: 409 });
+      return NextResponse.json({ error: "Username taken" }, { status: 400 });
     }
 
-    // Update username in profiles table
+    // Try updating both tables in a single transaction via RPC
+    const { error: rpcError } = await supabase.rpc("update_username", {
+      uid: token.sub as string,
+      new_username: username,
+    });
+
+    if (!rpcError) {
+      return NextResponse.json({ success: true, username });
+    }
+
+    console.warn("update_username RPC failed, falling back", rpcError);
+
+    // Fallback: sequential updates with manual rollback if the second fails
+    const { data: current, error: fetchOldErr } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("user_id", token.sub as string)
+      .maybeSingle();
+
+    if (fetchOldErr) {
+      console.error("Fetch current username error", fetchOldErr);
+      return NextResponse.json({ error: "Server error" }, { status: 500 });
+    }
+
     const { error: profileErr } = await supabase
       .from("profiles")
       .update({ username })
-      .eq("user_id", token.sub as string);
+      .eq("user_id", token.sub as string)
+      .select();
 
     if (profileErr) {
-      console.error("Update username error", profileErr);
+      console.error("Update profile username error", profileErr);
       return NextResponse.json(
         { error: "Failed to update username" },
         { status: 500 }
       );
     }
 
-    // Also update username in users table to keep both tables in sync
     const { error: userErr } = await supabase
       .from("users")
       .update({ username })
-      .eq("id", token.sub as string);
+      .eq("id", token.sub as string)
+      .select();
+
     if (userErr) {
       console.error("Update auth user username error", userErr);
+      // Rollback profile change
+      await supabase
+        .from("profiles")
+        .update({ username: current?.username })
+        .eq("user_id", token.sub as string);
+
       return NextResponse.json(
         { error: "Failed to update username" },
         { status: 500 }
