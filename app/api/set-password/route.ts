@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { signIn } from "next-auth/react";
 import bcrypt from "bcryptjs";
 import { createClient } from "@supabase/supabase-js";
 
@@ -60,18 +59,7 @@ export async function POST(req: Request) {
 
     await supabase.from("password_reset_tokens").delete().eq("token", token);
 
-    const loginRes = await signIn("credentials", {
-      redirect: false,
-      email: user.email,
-      password,
-    });
-
-    if (loginRes?.error) {
-      console.error("Auto-login failed:", loginRes.error);
-      return NextResponse.json({ error: "Login failed" }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, email: user.email });
   } catch (error) {
     console.error("Error in set-password route:", error);
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

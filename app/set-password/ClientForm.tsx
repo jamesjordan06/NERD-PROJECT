@@ -2,6 +2,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import { signIn } from 'next-auth/react';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function ClientForm() {
@@ -44,9 +45,21 @@ export default function ClientForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password })
       });
-      if (!res.ok) throw new Error('Failed');
-      toast.success('Password reset! Redirecting...');
-      router.push('/profile');
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+
+      toast.success('Password reset! Logging you in...');
+
+      const login = await signIn('credentials', {
+        redirect: false,
+        email: data.email,
+        password
+      });
+
+      if (login?.error) throw new Error('Login failed');
+
+      router.push('/');
     } catch {
       setStatus('error');
       toast.error('Failed to set password');
