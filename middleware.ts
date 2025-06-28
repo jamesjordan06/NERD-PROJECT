@@ -3,22 +3,11 @@ import { NextResponse } from "next/server";
 
 export default withAuth(
   function middleware(req) {
-    const token = req.nextauth.token as any;
-    const path = req.nextUrl.pathname;
-
-    if (
-      token &&
-      token.has_password === false &&
-      !path.startsWith("/set-password") &&
-      !path.startsWith("/api") &&
-      !path.startsWith("/_next") &&
-      path !== "/favicon.ico"
-    ) {
-      const url = req.nextUrl.clone();
-      url.pathname = "/set-password";
-      url.search = "";
-      return NextResponse.redirect(url);
-    }
+    // Previously this middleware redirected any session where
+    // `has_password` was false to `/set-password`. This caused
+    // OAuth users without a password to always be redirected after
+    // sign in. The redirect logic is now handled during the
+    // credentials sign-in flow only.
   },
   {
     callbacks: {
