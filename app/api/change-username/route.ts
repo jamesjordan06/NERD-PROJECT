@@ -8,14 +8,7 @@ const supabase = createClient(
 );
 
 const USERNAME_REGEX = /^[a-zA-Z0-9_]{3,20}$/;
-const OFFENSIVE = [
-  "admin",
-  "moderator",
-  "staff",
-  "fuck",
-  "shit",
-  "bitch",
-];
+const OFFENSIVE = ["admin", "moderator", "staff", "fuck", "shit", "bitch"];
 
 export async function POST(req: NextRequest) {
   const token = await getToken({ req });
@@ -35,20 +28,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Offensive term not allowed" }, { status: 400 });
     }
 
-    // Check if the desired username is already taken in profiles table
     const { data: existing, error: fetchErr } = await supabase
       .from("profiles")
       .select("id")
       .eq("username", username)
-      .neq("user_id", token.sub as string)
+      .neq("user_id", token.sub)
       .maybeSingle();
 
-    // Also ensure no other auth user already has this username
     const { data: existingUser, error: userFetchErr } = await supabase
       .from("users")
       .select("id")
       .eq("username", username)
-      .neq("id", token.sub as string)
+      .neq("id", token.sub)
       .maybeSingle();
 
     if (fetchErr || userFetchErr) {
@@ -60,11 +51,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Username taken" }, { status: 400 });
     }
 
-    // Get current username for potential rollback
     const { data: current, error: fetchOldErr } = await supabase
       .from("profiles")
       .select("username")
-      .eq("user_id", token.sub as string)
+      .eq("user_id", token.sub)
       .maybeSingle();
 
     if (fetchOldErr) {
@@ -75,35 +65,26 @@ export async function POST(req: NextRequest) {
     const { error: profileErr } = await supabase
       .from("profiles")
       .update({ username })
-      .eq("user_id", token.sub as string)
-      .select();
+      .eq("user_id", token.sub);
 
     if (profileErr) {
       console.error("Update profile username error", profileErr);
-      return NextResponse.json(
-        { error: "Failed to update username" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to update profile" }, { status: 500 });
     }
 
     const { error: userErr } = await supabase
       .from("users")
       .update({ username })
-      .eq("id", token.sub as string)
-      .select();
+      .eq("id", token.sub);
 
     if (userErr) {
-      console.error("Update auth user username error", userErr);
-      // Rollback profile change
+      console.error("Update user username error", userErr);
       await supabase
         .from("profiles")
         .update({ username: current?.username })
-        .eq("user_id", token.sub as string);
+        .eq("user_id", token.sub);
 
-      return NextResponse.json(
-        { error: "Failed to update username" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
     }
 
     return NextResponse.json({ success: true, username });
