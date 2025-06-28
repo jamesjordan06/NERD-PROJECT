@@ -48,7 +48,18 @@ export async function POST(req: Request) {
     from: "Interstellar Nerd <noreply@interstellarnerd.com>",
     to: email,
     subject: "Reset Your Password",
-    html: `<p>Reset your password by clicking below. This link is valid for 30 minutes:</p><p><a href="${resetUrl}">${resetUrl}</a></p>`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px;">
+        <h2 style="color: #4F46E5;">Reset Your Password</h2>
+        <p>Hey there!</p>
+        <p>Click the button below to reset your password. This link is valid for 30 minutes.</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${resetUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: bold;">Reset Password</a>
+        </div>
+        <p>If you didn’t request this, you can safely ignore this email.</p>
+        <p style="color: #888;">— The Interstellar Nerd Team 🚀</p>
+      </div>
+    `,
   });
 
   console.log("✉️ Sent reset email to", email, "with", resetUrl);
