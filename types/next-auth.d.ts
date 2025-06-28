@@ -4,12 +4,18 @@ declare module "next-auth" {
   interface Session {
     user: {
       id: string;
+      has_password: boolean;
     } & DefaultSession["user"];
-    requiresPasswordSetup?: boolean;
   }
 
   interface User extends DefaultUser {
     id: string;
+  }
+}
+
+declare module "next-auth/jwt" {
+  interface JWT {
+    has_password: boolean;
   }
 }
 

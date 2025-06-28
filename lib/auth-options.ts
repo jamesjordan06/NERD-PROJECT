@@ -261,6 +261,17 @@ export const authOptions: NextAuthOptions = {
           user.email?.split("@")[0] ||
           "user_" + Math.random().toString(36).slice(2, 10);
       }
+
+      if (user) {
+        const { adminSupabase } = createSupabaseClients();
+        const { data } = await adminSupabase
+          .from("users")
+          .select("has_password")
+          .eq("id", user.id)
+          .single();
+        (token as any).has_password = data?.has_password ?? false;
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -272,8 +283,9 @@ export const authOptions: NextAuthOptions = {
           session.user.name = token.name as string;
           session.user.image = token.picture as string;
           (session.user as any).username = token.username as string;
+          (session.user as any).has_password = (token as any).has_password as boolean;
 
-          
+
         }
 
         return session;
