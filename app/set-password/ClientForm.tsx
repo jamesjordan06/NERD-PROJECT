@@ -1,12 +1,14 @@
 'use client';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { toast } from 'react-hot-toast';
 import PasswordInput from '@/components/PasswordInput';
 
 export default function ClientForm() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const token = searchParams.get('token');
-  const [status, setStatus] = useState<'verifying' | 'invalid' | 'ready' | 'submitting' | 'success' | 'error'>('verifying');
+  const [status, setStatus] = useState<'verifying' | 'invalid' | 'ready' | 'submitting' | 'error'>('verifying');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -27,7 +29,7 @@ export default function ClientForm() {
 
   if (status === 'verifying') return <p>Validating token...</p>;
   if (status === 'invalid') return <p>Invalid or expired token.</p>;
-  if (status === 'success') return <p>Password updated! You can now log in.</p>;
+  // Success handled via toast + redirect
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,14 +39,17 @@ export default function ClientForm() {
     }
     setStatus('submitting');
     try {
-      const res = await fetch('/api/set-password-from-token', {
+      const res = await fetch('/api/set-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, password })
       });
-      setStatus(res.ok ? 'success' : 'error');
+      if (!res.ok) throw new Error('Failed');
+      toast.success('Password reset! Redirecting...');
+      router.push('/profile');
     } catch {
       setStatus('error');
+      toast.error('Failed to set password');
     }
   };
 
