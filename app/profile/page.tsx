@@ -75,7 +75,7 @@ export default async function ProfilePage() {
         isOwnProfile={true}
         user={session.user}
       />
-      <ChangeUsernameForm current={profile.username} />
+      
     </>
   );
 }
