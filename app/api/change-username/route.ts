@@ -60,19 +60,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Username taken" }, { status: 400 });
     }
 
-    // Try updating both tables in a single transaction via RPC
-    const { error: rpcError } = await supabase.rpc("update_username", {
-      uid: token.sub as string,
-      new_username: username,
-    });
-
-    if (!rpcError) {
-      return NextResponse.json({ success: true, username });
-    }
-
-    console.warn("update_username RPC failed, falling back", rpcError);
-
-    // Fallback: sequential updates with manual rollback if the second fails
+    // Get current username for potential rollback
     const { data: current, error: fetchOldErr } = await supabase
       .from("profiles")
       .select("username")
